@@ -60,10 +60,9 @@ class AFKManager:
         if event.sender_id == (await self.client.get_me()).id:
             return
 
-        # Ignore messages in groups unless the bot is mentioned
-        if event.is_group:
-            if not event.mentioned:
-                return
+        # Check if the message is in a group and the bot is not mentioned
+        if event.is_group and not event.mentioned:
+            return
 
         # Prevent multiple AFK replies to the same user in a short period
         current_time = time.time()
