@@ -22,7 +22,7 @@ REPEAT_BALL = set([
  "Kartana", "Keldeo", "Kubfu", "Kyogre", "Kyurem", "Landorus", "Lugia", "Magearna", "Marshadow", 
  "Mewtwo", "Necrozma", "Palkia", "Pheromosa", "Rayquaza", "Regieleki", "Regigigas", "Reshiram", 
  "Shaymin", "Spectrier", "Terrakion", "Victini", "Virizion", "Xerneas", "Yveltal", "Zacian", 
- "Zamazenta", "Zapdos", "Zekrom", "Zeraora", "Zygarde"
+ "Zamazenta", "Zekrom", "Zeraora", "Zygarde"
 ])
 
 ULTRA_BALL = set([
@@ -44,6 +44,10 @@ HELP_COMMAND_REGEX = r'^\.help$'
 EVAL_COMMAND_REGEX = r'^\.eval (.+)'
 GUESSER_COMMAND_REGEX = r'^\.guess (on|off|stats)$'
 HUNTER_COMMAND_REGEX = r'^\.hunt (on|off|stats)$'
+
+# AFK Commands
+AFK_COMMAND_REGEX = r'^\.afk(?: |$)(.*)'  # Matches `.afk` or `.afk <message>`
+UNAFK_COMMAND_REGEX = r'^\.unafk$'  # Matches `.unafk`
 
 COOLDOWN = lambda: random.randint(3, 6)
 PERIODICALLY_GUESS_SECONDS = 120
