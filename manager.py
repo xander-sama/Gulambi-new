@@ -1,5 +1,5 @@
 import time
-from typing import List, Dict, Callable, Optional
+from typing import List, Dict, Callable
 
 from loguru import logger
 from telethon import events
@@ -8,6 +8,7 @@ import constants
 from evaluate import ExpressionEvaluator
 from guesser import PokemonIdentificationEngine
 from hunter import PokemonHuntingEngine
+from afk import AFKManager  # Import AFKManager
 
 HELP_MESSAGE = """**Help**
 
@@ -16,7 +17,9 @@ HELP_MESSAGE = """**Help**
 • `.help` - help your self.
 • `.guess` (on/off/stats) - any guesses?
 • `.hunt` (on/off/stats) - hunting for poki
-• `.list` - list of poki"""
+• `.list` - list of poki
+• `.afk` (message) - set AFK status
+• `.unafk` - disable AFK status"""
 
 
 class Manager:
@@ -26,14 +29,16 @@ class Manager:
         '_client',
         '_guesser',
         '_hunter',
-        '_evaluator'
+        '_evaluator',
+        '_afk_manager'  # Add AFK manager
     )
-    
+
     def __init__(self, client) -> None:
         self._client = client
         self._guesser = PokemonIdentificationEngine(client)
         self._hunter = PokemonHuntingEngine(client)
         self._evaluator = ExpressionEvaluator(client)
+        self._afk_manager = AFKManager(client)  # Initialize AFK manager
 
     def start(self) -> None:
         """Starts the User's automations."""
@@ -42,11 +47,19 @@ class Manager:
         self._hunter.start()
         self._evaluator.start()
 
+        # Add AFK event handlers
+        for handler in self._afk_manager.get_event_handlers():
+            self._client.add_event_handler(
+                callback=handler['callback'], event=handler['event']
+            )
+            logger.debug(f'[{self.__class__.__name__}] Added AFK event handler: `{handler["callback"].__name__}`')
+
+        # Add other event handlers
         for handler in self.event_handlers:
             callback = handler.get('callback')
             event = handler.get('event')
             self._client.add_event_handler(
-               callback=callback, event=event
+                callback=callback, event=event
             )
             logger.debug(f'[{self.__class__.__name__}] Added event handler: `{callback.__name__}`')
 
