@@ -27,6 +27,8 @@ async def main():
 
         manager = Manager(client)
         manager.start()
+        print("Loaded event handlers:", len(client.list_event_handlers()))
+
 
         logger.info(f'Userbot Login successfull: {me.first_name} - @{me.username} ({me.id})')
         await client.run_until_disconnected()
