@@ -1,5 +1,5 @@
 import time
-from typing import List, Dict, Callable, Optional
+from typing import List, Dict, Callable
 
 from loguru import logger
 from telethon import events
@@ -23,7 +23,7 @@ HELP_MESSAGE = """**Help**
 
 
 class Manager:
-    """managing automation."""
+    """Manages automation."""
 
     __slots__ = (
         '_client',
@@ -49,38 +49,48 @@ class Manager:
 
         all_handlers = self.event_handlers + self._afk_manager.event_handlers  # Combine handlers
 
+        print(f"🔹 Total handlers: {len(all_handlers)}")  # Debugging
+
         for handler in all_handlers:
             callback = handler.get('callback')
             event = handler.get('event')
-            self._client.add_event_handler(
-                callback=callback, event=event
-            )
+
+            # Debugging each handler
+            print(f"✅ Adding handler: {callback.__name__}")
+
+            self._client.add_event_handler(callback=callback, event=event)
             logger.debug(f'[{self.__class__.__name__}] Added event handler: `{callback.__name__}`')
 
     async def ping_command(self, event) -> None:
+        print("⚡ Ping command received!")  # Debugging
         start = time.time()
         await event.edit('...')
         ping_ms = (time.time() - start) * 1000
         await event.edit(f'Pong!!\n{ping_ms:.2f}ms')
 
     async def alive_command(self, event) -> None:
+        print("⚡ Alive command received!")  # Debugging
         start = time.time()
         await event.edit('...')
         ping_ms = (time.time() - start) * 1000
         await event.edit(f"Hy Hello!! It's me [Gulambi](t.me/GulambiRobot).\n\nPing {ping_ms}ms")
 
     async def help_command(self, event) -> None:
+        print("⚡ Help command received!")  # Debugging
         await event.edit(HELP_MESSAGE)
 
     async def handle_guesser_automation_control_request(self, event) -> None:
         """Handles user-initiated requests to control the automation process (on/off)."""
+        print("⚡ Guess command received!")  # Debugging
         await self._guesser.handle_automation_control_request(event)
 
     async def handle_hunter_automation_control_request(self, event) -> None:
         """Handles user-initiated requests to control the automation process (on/off)."""
+        print("⚡ Hunt command received!")  # Debugging
         await self._hunter.handle_automation_control_request(event)
 
     async def handle_hunter_poki_list(self, event) -> None:
+        print("⚡ List command received!")  # Debugging
         await self._hunter.poki_list(event)
 
     @property
@@ -92,5 +102,5 @@ class Manager:
             {'callback': self.help_command, 'event': events.NewMessage(pattern=constants.HELP_COMMAND_REGEX, outgoing=True)},
             {'callback': self.handle_guesser_automation_control_request, 'event': events.NewMessage(pattern=constants.GUESSER_COMMAND_REGEX, outgoing=True)},
             {'callback': self.handle_hunter_automation_control_request, 'event': events.NewMessage(pattern=constants.HUNTER_COMMAND_REGEX, outgoing=True)},
-            {'callback': self.handle_hunter_poki_list, 'event': events.NewMessage(pattern=constants.HUNTER_LIST_REGEX, outgoing=True)}, # Added hunter list regex.
+            {'callback': self.handle_hunter_poki_list, 'event': events.NewMessage(pattern=constants.HUNTER_LIST_REGEX, outgoing=True)},
         ]
