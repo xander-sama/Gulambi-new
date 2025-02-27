@@ -84,7 +84,7 @@ class Manager:
             [Button.inline("General Commands", data="general_commands")]
         ]
         logger.debug(f"Buttons created: {buttons}")  # Debug log
-        await event.edit("Please select a section:", buttons=buttons)
+        await event.reply("Please select a section:", buttons=buttons)
         logger.debug("Help message sent with buttons")  # Debug log
 
     async def handle_button_click(self, event) -> None:
