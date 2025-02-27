@@ -6,8 +6,8 @@ from telethon import events, Button
 
 import constants
 from afk import AFKManager  # Import AFKManager
-from hunt import PokemonHuntingEngine  # Import PokemonHuntingEngine
-from guess import PokemonIdentificationEngine  # Import PokemonIdentificationEngine
+from hunter import PokemonHuntingEngine  # Import PokemonHuntingEngine
+from guesser import PokemonIdentificationEngine  # Import PokemonIdentificationEngine
 from evaluate import ExpressionEvaluator  # Import ExpressionEvaluator
 
 HELP_MESSAGE = """**Help**
