@@ -2,7 +2,7 @@ import time
 from typing import List, Dict, Callable
 
 from loguru import logger
-from telethon import events
+from telethon import events, Button
 
 import constants
 from evaluate import ExpressionEvaluator
@@ -12,18 +12,21 @@ from afk import AFKManager  # Import AFKManager
 
 HELP_MESSAGE = """**Help**
 
-• `.ping` - Pong
-• `.alive` - but dead inside.
-• `.help` - help your self.
-• `.guess` (on/off/stats) - any guesses?
-• `.hunt` (on/off/stats) - hunting for poki
-• `.list` - list of poki
-• `.afk` (message) - set AFK status
-• `.unafk` - disable AFK status"""
+**Pokemon Commands:**
+- `.guess` (on/off/stats) - Any guesses?
+- `.hunt` (on/off/stats) - Hunting for poki
+- `.list` - List of poki
+
+**General Commands:**
+- `.ping` - Pong
+- `.alive` - But dead inside.
+- `.help` - Help yourself.
+- `.afk` (message) - Set AFK status
+- `.unafk` - Disable AFK status"""
 
 
 class Manager:
-    """managing automation."""
+    """Managing automation."""
 
     __slots__ = (
         '_client',
@@ -76,7 +79,46 @@ class Manager:
         await event.edit(f"Hy Hello!! It's me [Gulambi](t.me/GulambiRobot).\n\nPing {ping_ms}ms")
 
     async def help_command(self, event) -> None:
-        await event.edit(HELP_MESSAGE)
+        buttons = [
+            [Button.inline("Pokemon Commands", data="pokemon_commands")],
+            [Button.inline("General Commands", data="general_commands")]
+        ]
+        await event.edit("Please select a section:", buttons=buttons)
+
+    async def handle_button_click(self, event) -> None:
+        data = event.data.decode('utf-8')
+        if data == "pokemon_commands":
+            buttons = [
+                [Button.inline("Guess (on/off/stats)", data="guess_command")],
+                [Button.inline("Hunt (on/off/stats)", data="hunt_command")],
+                [Button.inline("List Poki", data="list_command")]
+            ]
+            await event.edit("**Pokemon Commands:**", buttons=buttons)
+        elif data == "general_commands":
+            buttons = [
+                [Button.inline("Ping", data="ping_command")],
+                [Button.inline("Alive", data="alive_command")],
+                [Button.inline("Help", data="help_command")],
+                [Button.inline("AFK", data="afk_command")],
+                [Button.inline("UnAFK", data="unafk_command")]
+            ]
+            await event.edit("**General Commands:**", buttons=buttons)
+        elif data == "guess_command":
+            await self.handle_guesser_automation_control_request(event)
+        elif data == "hunt_command":
+            await self.handle_hunter_automation_control_request(event)
+        elif data == "list_command":
+            await self.handle_hunter_poki_list(event)
+        elif data == "ping_command":
+            await self.ping_command(event)
+        elif data == "alive_command":
+            await self.alive_command(event)
+        elif data == "help_command":
+            await self.help_command(event)
+        elif data == "afk_command":
+            await self._afk_manager.set_afk(event)
+        elif data == "unafk_command":
+            await self._afk_manager.unafk(event)
 
     async def handle_guesser_automation_control_request(self, event) -> None:
         """Handles user-initiated requests to control the automation process (on/off)."""
@@ -97,5 +139,6 @@ class Manager:
             {'callback': self.alive_command, 'event': events.NewMessage(pattern=constants.ALIVE_COMMAND_REGEX, outgoing=True)},
             {'callback': self.help_command, 'event': events.NewMessage(pattern=constants.HELP_COMMAND_REGEX, outgoing=True)},
             {'callback': self.handle_guesser_automation_control_request, 'event': events.NewMessage(pattern=constants.GUESSER_COMMAND_REGEX, outgoing=True)},
-            {'callback': self.handle_hunter_automation_control_request, 'event': events.NewMessage(pattern=constants.HUNTER_COMMAND_REGEX, outgoing=True)}
-        ]
+            {'callback': self.handle_hunter_automation_control_request, 'event': events.NewMessage(pattern=constants.HUNTER_COMMAND_REGEX, outgoing=True)},
+            {'callback': self.handle_button_click, 'event': events.CallbackQuery()}
+    ]
