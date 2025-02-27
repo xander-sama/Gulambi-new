@@ -33,15 +33,15 @@ class Manager:
         '_guesser',
         '_hunter',
         '_evaluator',
-        '_afk_manager'  # Add AFK manager
+        '_afk_manager'
     )
 
     def __init__(self, client) -> None:
         self._client = client
-        self._guesser = PokemonIdentificationEngine(client)  # Initialize guesser
-        self._hunter = PokemonHuntingEngine(client)  # Initialize hunter
-        self._evaluator = ExpressionEvaluator(client)  # Initialize evaluator
-        self._afk_manager = AFKManager(client)  # Initialize AFK manager
+        self._guesser = PokemonIdentificationEngine(client)
+        self._hunter = PokemonHuntingEngine(client)
+        self._evaluator = ExpressionEvaluator(client)
+        self._afk_manager = AFKManager(client)
 
     def start(self) -> None:
         """Starts the User's automations."""
@@ -61,41 +61,42 @@ class Manager:
         for handler in self.event_handlers:
             callback = handler.get('callback')
             event = handler.get('event')
-            self._client.add_event_handler(
-                callback=callback, event=event
-            )
+            self._client.add_event_handler(callback=callback, event=event)
             logger.debug(f'[{self.__class__.__name__}] Added event handler: `{callback.__name__}`')
 
     async def ping_command(self, event) -> None:
         start = time.time()
-        await event.edit('...')
+        await event.respond('...')
         ping_ms = (time.time() - start) * 1000
-        await event.edit(f'Pong!!\n{ping_ms:.2f}ms')
+        await event.respond(f'Pong!!\n{ping_ms:.2f}ms')
 
     async def alive_command(self, event) -> None:
         start = time.time()
-        await event.edit('...')
+        await event.respond('...')
         ping_ms = (time.time() - start) * 1000
-        await event.edit(f"Hy Hello!! It's me [Gulambi](t.me/GulambiRobot).\n\nPing {ping_ms}ms")
+        await event.respond(f"Hy Hello!! It's me [Gulambi](t.me/GulambiRobot).\n\nPing {ping_ms}ms")
 
     async def help_command(self, event) -> None:
         buttons = [
             [Button.inline("Pokemon Commands", data="pokemon_commands")],
             [Button.inline("General Commands", data="general_commands")]
         ]
-        logger.debug(f"Buttons created: {buttons}")  # Debug log
-        await event.reply("Please select a section:", buttons=buttons)
-        logger.debug("Help message sent with buttons")  # Debug log
+        logger.debug(f"Buttons created: {buttons}")
+        await event.respond("Please select a section:", buttons=buttons)
+        logger.debug("Help message sent with buttons")
 
     async def handle_button_click(self, event) -> None:
         data = event.data.decode('utf-8')
+        logger.debug(f"Button clicked: {data}")
+
         if data == "pokemon_commands":
             buttons = [
                 [Button.inline("Guess (on/off/stats)", data="guess_command")],
                 [Button.inline("Hunt (on/off/stats)", data="hunt_command")],
                 [Button.inline("List Poki", data="list_command")]
             ]
-            await event.edit("**Pokemon Commands:**", buttons=buttons)
+            await event.respond("**Pokemon Commands:**", buttons=buttons)
+
         elif data == "general_commands":
             buttons = [
                 [Button.inline("Ping", data="ping_command")],
@@ -104,7 +105,8 @@ class Manager:
                 [Button.inline("AFK", data="afk_command")],
                 [Button.inline("UnAFK", data="unafk_command")]
             ]
-            await event.edit("**General Commands:**", buttons=buttons)
+            await event.respond("**General Commands:**", buttons=buttons)
+
         elif data == "guess_command":
             await self.handle_guesser_automation_control_request(event)
         elif data == "hunt_command":
