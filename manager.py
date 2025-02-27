@@ -5,10 +5,10 @@ from loguru import logger
 from telethon import events, Button
 
 import constants
-from evaluate import ExpressionEvaluator
-from guesser import PokemonIdentificationEngine
-from hunter import PokemonHuntingEngine
 from afk import AFKManager  # Import AFKManager
+from hunt import PokemonHuntingEngine  # Import PokemonHuntingEngine
+from guess import PokemonIdentificationEngine  # Import PokemonIdentificationEngine
+from evaluate import ExpressionEvaluator  # Import ExpressionEvaluator
 
 HELP_MESSAGE = """**Help**
 
@@ -38,9 +38,9 @@ class Manager:
 
     def __init__(self, client) -> None:
         self._client = client
-        self._guesser = PokemonIdentificationEngine(client)
-        self._hunter = PokemonHuntingEngine(client)
-        self._evaluator = ExpressionEvaluator(client)
+        self._guesser = PokemonIdentificationEngine(client)  # Initialize guesser
+        self._hunter = PokemonHuntingEngine(client)  # Initialize hunter
+        self._evaluator = ExpressionEvaluator(client)  # Initialize evaluator
         self._afk_manager = AFKManager(client)  # Initialize AFK manager
 
     def start(self) -> None:
@@ -83,7 +83,9 @@ class Manager:
             [Button.inline("Pokemon Commands", data="pokemon_commands")],
             [Button.inline("General Commands", data="general_commands")]
         ]
+        logger.debug(f"Buttons created: {buttons}")  # Debug log
         await event.edit("Please select a section:", buttons=buttons)
+        logger.debug("Help message sent with buttons")  # Debug log
 
     async def handle_button_click(self, event) -> None:
         data = event.data.decode('utf-8')
@@ -141,4 +143,4 @@ class Manager:
             {'callback': self.handle_guesser_automation_control_request, 'event': events.NewMessage(pattern=constants.GUESSER_COMMAND_REGEX, outgoing=True)},
             {'callback': self.handle_hunter_automation_control_request, 'event': events.NewMessage(pattern=constants.HUNTER_COMMAND_REGEX, outgoing=True)},
             {'callback': self.handle_button_click, 'event': events.CallbackQuery()}
-    ]
+        ]
