@@ -11,7 +11,7 @@ from hunter import PokemonHuntingEngine
 from afk import AFKManager  # Import AFKManager
 
 # Replace this with your inline bot's username
-INLINE_BOT_USERNAME = "your_assistant_bot"
+INLINE_BOT_USERNAME = "Slyvezbot"
 
 HELP_MESSAGE = """**Help**
 
