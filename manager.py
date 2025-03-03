@@ -2,13 +2,16 @@ import time
 from typing import List, Dict, Callable
 
 from loguru import logger
-from telethon import events
+from telethon import events, Button
 
 import constants
 from evaluate import ExpressionEvaluator
 from guesser import PokemonIdentificationEngine
 from hunter import PokemonHuntingEngine
 from afk import AFKManager  # Import AFKManager
+
+# Replace this with your inline bot's username
+INLINE_BOT_USERNAME = "your_assistant_bot"
 
 HELP_MESSAGE = """**Help**
 
@@ -76,7 +79,14 @@ class Manager:
         await event.edit(f"Hy Hello!! It's me [Gulambi](t.me/GulambiRobot).\n\nPing {ping_ms}ms")
 
     async def help_command(self, event) -> None:
-        await event.edit(HELP_MESSAGE)
+        # Create a switch inline button to trigger the inline bot
+        button = [
+            [Button.switch_inline("Open Help Menu", query=f"@{INLINE_BOT_USERNAME} help", same_peer=True)]
+        ]
+        await event.edit(
+            "**Help Menu**\nClick the button below to view help options:",
+            buttons=button
+        )
 
     async def handle_guesser_automation_control_request(self, event) -> None:
         """Handles user-initiated requests to control the automation process (on/off)."""
