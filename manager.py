@@ -9,7 +9,7 @@ from evaluate import ExpressionEvaluator
 from guesser import PokemonIdentificationEngine
 from hunter import PokemonHuntingEngine
 from afk import AFKManager  
-from handlers.alive import AliveHandler  # Import AliveHandler
+from alive import AliveHandler  # Import AliveHandler
 
 HELP_MESSAGE = """**Help**
 
