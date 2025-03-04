@@ -552,7 +552,8 @@ class PokemonHuntingEngine:
                                 if ball_name not in available_balls:
                                     warning = f"Looks like you don't have enough {ball_name} balls. Please buy more before hunting."
                                     await self._client.send_message(entity=constants.CHAT_ID, message=warning)
-                                    logger.warning(warning)      ball_name = available_balls[-1]
+                                    logger.warning(warning)   
+                                    ball_name = available_balls[-1]
                                 await self._click_button(event=event, text=ball_name)
                                 logger.debug(f"Clicked on {ball_name} Ball for {pok_name}.")
                                 self.activity_monitor.record_activity(activity_type=ActivityType.POKEBALL_USED, value=ball_name)
