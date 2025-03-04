@@ -40,7 +40,7 @@ def save_pokemon_data():
         json.dump(POKEMON_CATEGORIES, f, indent=4)
 
 # Owner and Bot Information
-OWNER_NAME = "Amit"
+OWNER_NAME = "Enryu"
 BOT_VERSION = "1.0"
 
 # Command Regex Patterns
