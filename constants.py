@@ -53,7 +53,8 @@ EVAL_COMMAND_REGEX = r'^\.eval (.+)'
 GUESSER_COMMAND_REGEX = r'^\.guess (on|off|stats)$'
 HUNTER_COMMAND_REGEX = r'^\.hunt (on|off|stats)$'
 LIST_COMMAND_REGEX = r'^\.list(?:\s+(.+))?$'  # `.list <category>`
-ADD_COMMAND_REGEX = r'^\.add (.+) (\w+)$'  # `.add <pokemon> <category>`
+ADD_COMMAND_REGEX = r'^\.add (.+?) (\w+)$'
+
 
 # AFK Commands
 AFK_COMMAND_REGEX = r'^\.afk(?: |$)(.*)'  # Matches `.afk` or `.afk <message>`
