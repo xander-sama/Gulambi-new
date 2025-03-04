@@ -18,17 +18,17 @@ HELP_MESSAGE = """**Help**
 • `.help` - Help menu
 • `.guess` (on/off/stats) - any guesses?
 • `.hunt` (on/off/stats) - hunting for poki
-• `.list` <category> - List Pokémon by category
+• `.list <category>` - List Pokémon by category
 • `.afk` (message) - Set AFK status
 • `.unafk` - Disable AFK status
 
 **Available Categories for `.list`**
-- Regular
-- Repeat
-- Ultra
-- Great
-- Nest
-- Safari
+- `regular`
+- `repeat`
+- `ultra`
+- `great`
+- `nest`
+- `safari`
 """
 
 class Manager:
@@ -109,8 +109,17 @@ class Manager:
             "safari": constants.SAFARI
         }
 
-        if args is None:  # If no category is given, show available categories
-            await event.edit("**Usage:** `.list <category>`\n\n**Available categories:**\n- Regular\n- Repeat\n- Ultra\n- Great\n- Nest\n- Safari")
+        if not args:  # If no category is given, show available categories
+            await event.edit(
+                "**Usage:** `.list <category>`\n\n"
+                "**Available categories:**\n"
+                "- `regular`\n"
+                "- `repeat`\n"
+                "- `ultra`\n"
+                "- `great`\n"
+                "- `nest`\n"
+                "- `safari`"
+            )
             return
 
         category = args.lower()
@@ -123,7 +132,7 @@ class Manager:
             await event.edit(f"No Pokémon found in `{category}` category.")
             return
 
-        formatted_list = "\n".join(pokemon_list)  # Convert set to string list
+        formatted_list = ", ".join(pokemon_list)  # Convert set to comma-separated string
         await event.edit(f"**{category.capitalize()} Ball Pokémon:**\n{formatted_list}")
 
     @property
