@@ -40,7 +40,7 @@ class Manager:
         '_hunter',
         '_evaluator',
         '_afk_manager',
-        '_alive_handler'  # Added AliveHandler
+        '_alive_handler'
     )
 
     def __init__(self, client) -> None:
@@ -49,7 +49,7 @@ class Manager:
         self._hunter = PokemonHuntingEngine(client)
         self._evaluator = ExpressionEvaluator(client)
         self._afk_manager = AFKManager(client)  
-        self._alive_handler = AliveHandler(client)  # Initialize AliveHandler
+        self._alive_handler = AliveHandler(client)  
 
     def start(self) -> None:
         """Starts the Userbot's automations."""
@@ -57,21 +57,17 @@ class Manager:
         self._guesser.start()
         self._hunter.start()
         self._evaluator.start()
-        self._alive_handler.register()  # Register `.alive` command
+        self._alive_handler.register()  
 
         # Add AFK event handlers
         for handler in self._afk_manager.get_event_handlers():
-            self._client.add_event_handler(
-                callback=handler['callback'], event=handler['event']
-            )
+            self._client.add_event_handler(handler['callback'], handler['event'])
             logger.debug(f'[{self.__class__.__name__}] Added AFK event handler: `{handler["callback"].__name__}`')
 
-        # Add other event handlers
+        # Register event handlers
         for handler in self.event_handlers:
-            callback = handler.get('callback')
-            event = handler.get('event')
-            self._client.add_event_handler(callback=callback, event=event)
-            logger.debug(f'[{self.__class__.__name__}] Added event handler: `{callback.__name__}`')
+            self._client.add_event_handler(handler['callback'], handler['event'])
+            logger.debug(f'[{self.__class__.__name__}] Added event handler: `{handler["callback"].__name__}`')
 
     async def ping_command(self, event) -> None:
         """Handles the `.ping` command."""
@@ -92,13 +88,9 @@ class Manager:
         """Handles user requests to enable/disable hunter automation."""
         await self._hunter.handle_automation_control_request(event)
 
-    async def handle_hunter_poki_list(self, event) -> None:
-        """Handles listing captured Pokémon."""
-        await self._hunter.poki_list(event)
-
     async def list_pokemon(self, event) -> None:
         """Handles the `.list` command by showing Pokémon based on the specified category."""
-        args = event.pattern_match.group(1)  # Get the category (e.g., "regular", "repeat")
+        args = event.pattern_match.group(1)
 
         categories = {
             "regular": constants.REGULAR_BALL,
@@ -109,7 +101,7 @@ class Manager:
             "safari": constants.SAFARI
         }
 
-        if not args:  # If no category is given, show available categories
+        if not args:  
             await event.edit(
                 "**Usage:** `.list <category>`\n\n"
                 "**Available categories:**\n"
@@ -132,7 +124,7 @@ class Manager:
             await event.edit(f"No Pokémon found in `{category}` category.")
             return
 
-        formatted_list = ", ".join(pokemon_list)  # Convert set to comma-separated string
+        formatted_list = ", ".join(sorted(pokemon_list))  
         await event.edit(f"**{category.capitalize()} Ball Pokémon:**\n{formatted_list}")
 
     @property
@@ -143,5 +135,5 @@ class Manager:
             {'callback': self.help_command, 'event': events.NewMessage(pattern=constants.HELP_COMMAND_REGEX, outgoing=True)},
             {'callback': self.handle_guesser_automation_control_request, 'event': events.NewMessage(pattern=constants.GUESSER_COMMAND_REGEX, outgoing=True)},
             {'callback': self.handle_hunter_automation_control_request, 'event': events.NewMessage(pattern=constants.HUNTER_COMMAND_REGEX, outgoing=True)},
-            {'callback': self.list_pokemon, 'event': events.NewMessage(pattern=constants.LIST_COMMAND_REGEX, outgoing=True)}  # Register .list
+            {'callback': self.list_pokemon, 'event': events.NewMessage(pattern=constants.LIST_COMMAND_REGEX, outgoing=True)}
         ]
