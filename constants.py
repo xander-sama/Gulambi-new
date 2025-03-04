@@ -22,7 +22,7 @@ REPEAT_BALL = set([
 ])
 
 ULTRA_BALL = set([])
-GREAT_BALL = set([abra])
+GREAT_BALL = set([ "abra " ])
 REGULAR_BALL = set([])
 
 # Owner and Bot Information
