@@ -27,12 +27,14 @@ DEFAULT_CATEGORIES = {
     ]
 }
 
-# Load Pokémon Categories from file or use default
-if os.path.exists(POKEMON_DATA_FILE):
-    with open(POKEMON_DATA_FILE, "r") as f:
-        POKEMON_CATEGORIES = json.load(f)
-else:
-    POKEMON_CATEGORIES = DEFAULT_CATEGORIES
+# Ensure the file exists and is properly initialized
+if not os.path.exists(POKEMON_DATA_FILE):
+    with open(POKEMON_DATA_FILE, "w") as f:
+        json.dump(DEFAULT_CATEGORIES, f, indent=4)
+
+# Load Pokémon Categories
+with open(POKEMON_DATA_FILE, "r") as f:
+    POKEMON_CATEGORIES = json.load(f)
 
 # Function to save Pokémon categories to file
 def save_pokemon_data():
@@ -50,8 +52,8 @@ HELP_COMMAND_REGEX = r'^\.help$'
 EVAL_COMMAND_REGEX = r'^\.eval (.+)'
 GUESSER_COMMAND_REGEX = r'^\.guess (on|off|stats)$'
 HUNTER_COMMAND_REGEX = r'^\.hunt (on|off|stats)$'
-LIST_COMMAND_REGEX = r'^\.list(?:\s+(\w+))?$'  # `.list <category>`
-ADD_COMMAND_REGEX = r'^\.add (\w+) (\w+)$'  # `.add <pokemon> <category>`
+LIST_COMMAND_REGEX = r'^\.list(?:\s+(.+))?$'  # `.list <category>`
+ADD_COMMAND_REGEX = r'^\.add (.+) (\w+)$'  # `.add <pokemon> <category>`
 
 # AFK Commands
 AFK_COMMAND_REGEX = r'^\.afk(?: |$)(.*)'  # Matches `.afk` or `.afk <message>`
