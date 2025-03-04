@@ -4,8 +4,10 @@ import random
 
 # Pokémon Categories
 SAFARI = set([])
-
 NEST_BALL = set([])
+ULTRA_BALL = set([])
+GREAT_BALL = set(["Abra"])
+REGULAR_BALL = set([])
 
 REPEAT_BALL = set([
     "Venusaur", "Charizard", "Blastoise", "Beedrill", "Alakazam", "Slowbro",
@@ -21,10 +23,6 @@ REPEAT_BALL = set([
     "Zamazenta", "Zekrom", "Zeraora", "Zygarde"
 ])
 
-ULTRA_BALL = set([])
-GREAT_BALL = set([ "abra " ])
-REGULAR_BALL = set([])
-
 # Owner and Bot Information
 OWNER_NAME = "Enryu"
 BOT_VERSION = "1.0"
@@ -36,7 +34,7 @@ HELP_COMMAND_REGEX = r'^\.help$'
 EVAL_COMMAND_REGEX = r'^\.eval (.+)'
 GUESSER_COMMAND_REGEX = r'^\.guess (on|off|stats)$'
 HUNTER_COMMAND_REGEX = r'^\.hunt (on|off|stats)$'
-LIST_COMMAND_REGEX = r'^\.list$'  # Added .list command
+LIST_COMMAND_REGEX = r'^\.list(?:\s+(\w+))?$'  # Now supports `.list <category>`
 
 # AFK Commands
 AFK_COMMAND_REGEX = r'^\.afk(?: |$)(.*)'  # Matches `.afk` or `.afk <message>`
