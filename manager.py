@@ -83,8 +83,8 @@ class Manager:
         """Handles user requests to enable/disable hunter automation."""
         await self._hunter.handle_automation_control_request(event)
 
-    async def handle_hunter_poki_list(self, event) -> None:
-        """Handles listing captured Pokémon."""
+    async def handle_list_command(self, event) -> None:
+        """Handles the `.list` command to display captured Pokémon."""
         await self._hunter.poki_list(event)
 
     @property
@@ -94,5 +94,6 @@ class Manager:
             {'callback': self.ping_command, 'event': events.NewMessage(pattern=constants.PING_COMMAND_REGEX, outgoing=True)},
             {'callback': self.help_command, 'event': events.NewMessage(pattern=constants.HELP_COMMAND_REGEX, outgoing=True)},
             {'callback': self.handle_guesser_automation_control_request, 'event': events.NewMessage(pattern=constants.GUESSER_COMMAND_REGEX, outgoing=True)},
-            {'callback': self.handle_hunter_automation_control_request, 'event': events.NewMessage(pattern=constants.HUNTER_COMMAND_REGEX, outgoing=True)}
+            {'callback': self.handle_hunter_automation_control_request, 'event': events.NewMessage(pattern=constants.HUNTER_COMMAND_REGEX, outgoing=True)},
+            {'callback': self.handle_list_command, 'event': events.NewMessage(pattern=constants.LIST_COMMAND_REGEX, outgoing=True)}  # Added .list command
         ]
