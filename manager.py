@@ -18,9 +18,18 @@ HELP_MESSAGE = """**Help**
 • `.help` - Help menu
 • `.guess` (on/off/stats) - any guesses?
 • `.hunt` (on/off/stats) - hunting for poki
-• `.list` - list of poki
-• `.afk` (message) - set AFK status
-• `.unafk` - disable AFK status"""
+• `.list` <category> - List Pokémon by category
+• `.afk` (message) - Set AFK status
+• `.unafk` - Disable AFK status
+
+**Available Categories for `.list`**
+- Regular
+- Repeat
+- Ultra
+- Great
+- Nest
+- Safari
+"""
 
 class Manager:
     """Manages automation for the Userbot."""
@@ -83,9 +92,39 @@ class Manager:
         """Handles user requests to enable/disable hunter automation."""
         await self._hunter.handle_automation_control_request(event)
 
-    async def handle_list_command(self, event) -> None:
-        """Handles the `.list` command to display captured Pokémon."""
+    async def handle_hunter_poki_list(self, event) -> None:
+        """Handles listing captured Pokémon."""
         await self._hunter.poki_list(event)
+
+    async def list_pokemon(self, event) -> None:
+        """Handles the `.list` command by showing Pokémon based on the specified category."""
+        args = event.pattern_match.group(1)  # Get the category (e.g., "regular", "repeat")
+
+        categories = {
+            "regular": constants.REGULAR_BALL,
+            "repeat": constants.REPEAT_BALL,
+            "ultra": constants.ULTRA_BALL,
+            "great": constants.GREAT_BALL,
+            "nest": constants.NEST_BALL,
+            "safari": constants.SAFARI
+        }
+
+        if args is None:  # If no category is given, show available categories
+            await event.edit("**Usage:** `.list <category>`\n\n**Available categories:**\n- Regular\n- Repeat\n- Ultra\n- Great\n- Nest\n- Safari")
+            return
+
+        category = args.lower()
+        if category not in categories:
+            await event.edit(f"**Invalid category!**\nUse one of: {', '.join(categories.keys())}")
+            return
+
+        pokemon_list = categories[category]
+        if not pokemon_list:
+            await event.edit(f"No Pokémon found in `{category}` category.")
+            return
+
+        formatted_list = "\n".join(pokemon_list)  # Convert set to string list
+        await event.edit(f"**{category.capitalize()} Ball Pokémon:**\n{formatted_list}")
 
     @property
     def event_handlers(self) -> List[Dict[str, Callable | events.NewMessage]]:
@@ -95,5 +134,5 @@ class Manager:
             {'callback': self.help_command, 'event': events.NewMessage(pattern=constants.HELP_COMMAND_REGEX, outgoing=True)},
             {'callback': self.handle_guesser_automation_control_request, 'event': events.NewMessage(pattern=constants.GUESSER_COMMAND_REGEX, outgoing=True)},
             {'callback': self.handle_hunter_automation_control_request, 'event': events.NewMessage(pattern=constants.HUNTER_COMMAND_REGEX, outgoing=True)},
-            {'callback': self.handle_list_command, 'event': events.NewMessage(pattern=constants.LIST_COMMAND_REGEX, outgoing=True)}  # Added .list command
+            {'callback': self.list_pokemon, 'event': events.NewMessage(pattern=constants.LIST_COMMAND_REGEX, outgoing=True)}  # Register .list
         ]
