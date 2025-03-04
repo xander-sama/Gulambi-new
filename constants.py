@@ -6,8 +6,10 @@ import random
 SAFARI = set([])
 NEST_BALL = set([])
 ULTRA_BALL = set([])
-GREAT_BALL = set(["Abra"])
-REGULAR_BALL = set([])
+GREAT_BALL = set([])
+REGULAR_BALL = set([
+    "wild"
+])
 
 REPEAT_BALL = set([
     "Venusaur", "Charizard", "Blastoise", "Beedrill", "Alakazam", "Slowbro",
