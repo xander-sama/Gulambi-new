@@ -9,7 +9,7 @@ from evaluate import ExpressionEvaluator
 from guesser import PokemonIdentificationEngine
 from hunter import PokemonHuntingEngine
 from afk import AFKManager  
-from alive import AliveHandler  
+from alive import AliveHandler  # Import AliveHandler
 
 HELP_MESSAGE = """**Help**
 
@@ -19,35 +19,17 @@ HELP_MESSAGE = """**Help**
 • `.guess` (on/off/stats) - any guesses?
 • `.hunt` (on/off/stats) - hunting for poki
 • `.list <category>` - List Pokémon by category
-• `.add <pokemon> <category>` - Add Pokémon to a category
 • `.afk` (message) - Set AFK status
 • `.unafk` - Disable AFK status
 
 **Available Categories for `.list`**
-""" + "\n".join([f"- `{category}`" for category in constants.POKEMON_CATEGORIES.keys()])
-
-async def add_pokemon(event):
-    """Handles the `.add` command to add Pokémon to a category."""
-    args = event.pattern_match.group(1).rsplit(" ", 1)  # Preserve Pokémon names with spaces
-
-    if len(args) < 2:
-        await event.edit("**Usage:** `.add <pokemon> <category>`")
-        return
-
-    pokemon, category = args[0].strip().capitalize(), args[1].lower()
-
-    if category not in constants.POKEMON_CATEGORIES:
-        await event.edit(f"**Invalid category!**\nAvailable categories: {', '.join(constants.POKEMON_CATEGORIES.keys())}")
-        return
-
-    if pokemon in constants.POKEMON_CATEGORIES[category]:
-        await event.edit(f"**{pokemon}** is already in the `{category}` category!")
-        return
-
-    constants.POKEMON_CATEGORIES[category].add(pokemon)  # Use .add() for sets
-    constants.save_pokemon_data()  # Save changes
-
-    await event.edit(f"✅ **{pokemon}** has been added to the `{category}` category!")
+- `regular`
+- `repeat`
+- `ultra`
+- `great`
+- `nest`
+- `safari`
+"""
 
 class Manager:
     """Manages automation for the Userbot."""
@@ -110,30 +92,40 @@ class Manager:
         """Handles the `.list` command by showing Pokémon based on the specified category."""
         args = event.pattern_match.group(1)
 
+        categories = {
+            "regular": constants.REGULAR_BALL,
+            "repeat": constants.REPEAT_BALL,
+            "ultra": constants.ULTRA_BALL,
+            "great": constants.GREAT_BALL,
+            "nest": constants.NEST_BALL,
+            "safari": constants.SAFARI
+        }
+
         if not args:  
             await event.edit(
                 "**Usage:** `.list <category>`\n\n"
                 "**Available categories:**\n"
-                + "\n".join([f"- `{category}`" for category in constants.POKEMON_CATEGORIES.keys()])
+                "- `regular`\n"
+                "- `repeat`\n"
+                "- `ultra`\n"
+                "- `great`\n"
+                "- `nest`\n"
+                "- `safari`"
             )
             return
 
         category = args.lower()
-        if category not in constants.POKEMON_CATEGORIES:
-            await event.edit(f"**Invalid category!**\nUse one of: {', '.join(constants.POKEMON_CATEGORIES.keys())}")
+        if category not in categories:
+            await event.edit(f"**Invalid category!**\nUse one of: {', '.join(categories.keys())}")
             return
 
-        pokemon_list = constants.POKEMON_CATEGORIES[category]
+        pokemon_list = categories[category]
         if not pokemon_list:
             await event.edit(f"No Pokémon found in `{category}` category.")
             return
 
         formatted_list = ", ".join(sorted(pokemon_list))  
         await event.edit(f"**{category.capitalize()} Ball Pokémon:**\n{formatted_list}")
-
-    async def handle_add_pokemon(self, event) -> None:
-        """Handles adding Pokémon to a category."""
-        await add_pokemon(event)
 
     @property
     def event_handlers(self) -> List[Dict[str, Callable | events.NewMessage]]:
@@ -143,6 +135,5 @@ class Manager:
             {'callback': self.help_command, 'event': events.NewMessage(pattern=constants.HELP_COMMAND_REGEX, outgoing=True)},
             {'callback': self.handle_guesser_automation_control_request, 'event': events.NewMessage(pattern=constants.GUESSER_COMMAND_REGEX, outgoing=True)},
             {'callback': self.handle_hunter_automation_control_request, 'event': events.NewMessage(pattern=constants.HUNTER_COMMAND_REGEX, outgoing=True)},
-            {'callback': self.list_pokemon, 'event': events.NewMessage(pattern=constants.LIST_COMMAND_REGEX, outgoing=True)},
-            {'callback': self.handle_add_pokemon, 'event': events.NewMessage(pattern=constants.ADD_COMMAND_REGEX, outgoing=True)}
-        ]
+            {'callback': self.list_pokemon, 'event': events.NewMessage(pattern=constants.LIST_COMMAND_REGEX, outgoing=True)}
+        
