@@ -2,46 +2,26 @@ import os
 import json
 import random
 
-# JSON File for Saving Categories
-CATEGORIES_FILE = "pokemon_categories.json"
+# Pokémon Categories
+SAFARI = set([])
+NEST_BALL = set([])
+ULTRA_BALL = set([])
+GREAT_BALL = set(["Abra"])
+REGULAR_BALL = set([])
 
-# Default Pokémon Categories
-DEFAULT_CATEGORIES = {
-    "safari": [],
-    "nest_ball": [],
-    "ultra_ball": [],
-    "great_ball": ["Abra"],
-    "regular_ball": [],
-    "repeat_ball": [
-        "Venusaur", "Charizard", "Blastoise", "Beedrill", "Alakazam", "Slowbro",
-        "Mewtwo", "Aerodactyl", "Ampharos", "Steelix", "Scizor",
-        "Sceptile", "Blaziken", "Swampert", "Gardevoir", "Sableye", "Mawile",
-        "Aggron", "Medicham", "Manectric", "Sharpedo", "Camerupt", "Altaria", "Banette", "Absol", "Glalie",
-        "Metagross", "Lucario", "Abomasnow", "Gallade", "Audino",
-        "Blacephalon", "Buzzwole", "Cobalion", "Cosmog", "Cosmoem", "Deoxys", "Diancie", "Dialga",
-        "Eternatus", "Genesect", "Giratina", "Glastrier", "Groudon", "Ho-oh", "Hoopa", "Jirachi",
-        "Kartana", "Keldeo", "Kubfu", "Kyogre", "Kyurem", "Landorus", "Lugia", "Magearna", "Marshadow",
-        "Mewtwo", "Necrozma", "Palkia", "Pheromosa", "Rayquaza", "Regieleki", "Regigigas", "Reshiram",
-        "Shaymin", "Spectrier", "Terrakion", "Victini", "Virizion", "Xerneas", "Yveltal", "Zacian",
-        "Zamazenta", "Zekrom", "Zeraora", "Zygarde"
-    ]
-}
-
-# Load Pokémon Categories from JSON File (if exists)
-if os.path.exists(CATEGORIES_FILE):
-    with open(CATEGORIES_FILE, "r") as f:
-        try:
-            loaded_data = json.load(f)
-            POKEMON_CATEGORIES = {k: set(v) for k, v in loaded_data.items()}
-        except json.JSONDecodeError:
-            POKEMON_CATEGORIES = {k: set(v) for k, v in DEFAULT_CATEGORIES.items()}
-else:
-    POKEMON_CATEGORIES = {k: set(v) for k, v in DEFAULT_CATEGORIES.items()}
-
-def save_pokemon_categories():
-    """Saves the updated Pokémon categories to a JSON file."""
-    with open(CATEGORIES_FILE, "w") as f:
-        json.dump({k: list(v) for k, v in POKEMON_CATEGORIES.items()}, f, indent=4)
+REPEAT_BALL = set([
+    "Venusaur", "Charizard", "Blastoise", "Beedrill", "Alakazam", "Slowbro",
+    "Mewtwo", "Aerodactyl", "Ampharos", "Steelix", "Scizor",
+    "Sceptile", "Blaziken", "Swampert", "Gardevoir", "Sableye", "Mawile",
+    "Aggron", "Medicham", "Manectric", "Sharpedo", "Camerupt", "Altaria", "Banette", "Absol", "Glalie",
+    "Metagross", "Lucario", "Abomasnow", "Gallade", "Audino",
+    "Blacephalon", "Buzzwole", "Cobalion", "Cosmog", "Cosmoem", "Deoxys", "Diancie", "Dialga",
+    "Eternatus", "Genesect", "Giratina", "Glastrier", "Groudon", "Ho-oh", "Hoopa", "Jirachi",
+    "Kartana", "Keldeo", "Kubfu", "Kyogre", "Kyurem", "Landorus", "Lugia", "Magearna", "Marshadow",
+    "Mewtwo", "Necrozma", "Palkia", "Pheromosa", "Rayquaza", "Regieleki", "Regigigas", "Reshiram",
+    "Shaymin", "Spectrier", "Terrakion", "Victini", "Virizion", "Xerneas", "Yveltal", "Zacian",
+    "Zamazenta", "Zekrom", "Zeraora", "Zygarde"
+])
 
 # Owner and Bot Information
 OWNER_NAME = "Enryu"
