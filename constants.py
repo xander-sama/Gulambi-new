@@ -37,6 +37,10 @@ REGULAR_BALL = set([
  "",
 ])
 
+# owner username and bot version 
+OWNER_NAME = "Enryu"
+BOT_VERSION = "1.0"
+
 # Commands
 PING_COMMAND_REGEX = r'^\.ping$'
 ALIVE_COMMAND_REGEX = r'^\.alive$'
