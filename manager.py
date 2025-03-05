@@ -8,8 +8,8 @@ import constants
 from evaluate import ExpressionEvaluator
 from guesser import PokemonIdentificationEngine
 from hunter import PokemonHuntingEngine
-from afk import AFKManager  
-from alive import AliveHandler  # Import AliveHandler
+from afk import AFKManager
+from alive import AliveHandler
 
 HELP_MESSAGE = """**Help**
 
@@ -40,7 +40,8 @@ class Manager:
         '_hunter',
         '_evaluator',
         '_afk_manager',
-        '_alive_handler'
+        '_alive_handler',
+        '_auto_battle_manager'  # Add AutoBattleManager
     )
 
     def __init__(self, client) -> None:
@@ -48,8 +49,9 @@ class Manager:
         self._guesser = PokemonIdentificationEngine(client)
         self._hunter = PokemonHuntingEngine(client)
         self._evaluator = ExpressionEvaluator(client)
-        self._afk_manager = AFKManager(client)  
-        self._alive_handler = AliveHandler(client)  
+        self._afk_manager = AFKManager(client)
+        self._alive_handler = AliveHandler(client)
+        self._auto_battle_manager = AutoBattleManager(client)  # Initialize AutoBattleManager
 
     def start(self) -> None:
         """Starts the Userbot's automations."""
@@ -57,12 +59,17 @@ class Manager:
         self._guesser.start()
         self._hunter.start()
         self._evaluator.start()
-        self._alive_handler.register()  
+        self._alive_handler.register()
 
         # Add AFK event handlers
         for handler in self._afk_manager.get_event_handlers():
             self._client.add_event_handler(handler['callback'], handler['event'])
             logger.debug(f'[{self.__class__.__name__}] Added AFK event handler: `{handler["callback"].__name__}`')
+
+        # Add AutoBattle event handlers
+        for handler in self._auto_battle_manager.event_handlers:
+            self._client.add_event_handler(handler['callback'], handler['event'])
+            logger.debug(f'[{self.__class__.__name__}] Added AutoBattle event handler: `{handler["callback"].__name__}`')
 
         # Register event handlers
         for handler in self.event_handlers:
@@ -136,4 +143,4 @@ class Manager:
             {'callback': self.handle_guesser_automation_control_request, 'event': events.NewMessage(pattern=constants.GUESSER_COMMAND_REGEX, outgoing=True)},
             {'callback': self.handle_hunter_automation_control_request, 'event': events.NewMessage(pattern=constants.HUNTER_COMMAND_REGEX, outgoing=True)},
             {'callback': self.list_pokemon, 'event': events.NewMessage(pattern=constants.LIST_COMMAND_REGEX, outgoing=True)}
-        ]  
+        ]
