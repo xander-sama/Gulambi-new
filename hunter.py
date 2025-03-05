@@ -24,70 +24,80 @@ class Counter:
         self.count = 0
 
 class Auto:
-    """Handles the state of auto-battling."""
+    """Handles the state of auto-hunting."""
     
     def __init__(self):
         self.state = False
 
     def start(self):
-        """Starts the auto-battle mode."""
+        """Starts the auto-hunt mode."""
         self.state = True
 
     def stop(self, counter):
-        """Stops the auto-battle mode and resets the counter."""
+        """Stops the auto-hunt mode and resets the counter."""
         self.state = False
         counter.reset()
 
 class PokemonHuntingEngine:
-    """Manages auto-battle functionality for the Userbot."""
+    """Manages auto-hunt functionality for the Userbot."""
 
     def __init__(self, client):
         self._client = client
         self._auto = Auto()
         self._counter = Counter()
-        self._low_lvl = False
 
-    async def send_hunt_periodically(self):
-        """Sends /hunt command every 15 minutes until the client disconnects."""
-        while self._client.is_connected():
-            await asyncio.sleep(constants.PERIODICALLY_HUNT_SECONDS)
-            if self._auto.state:
-                await self._client.send_message(entity=constants.HEXA_BOT_ID, message='/hunt')
+    def start(self):
+        """Registers event handlers for hunting."""
+        for handler in self.event_handlers:
+            self._client.add_event_handler(handler['callback'], handler['event'])
+            logger.debug(f"[{self.__class__.__name__}] Registered event handler: {handler['callback'].__name__}")
 
-    async def auto_command(self, event):
-        """Handles the auto-battle command."""
-        if event.raw_text.endswith('on'):
+    async def handle_automation_control_request(self, event):
+        """Handles the `.hunt on/off/stats` command."""
+        command = event.raw_text.split()
+        if len(command) < 2:
+            await event.edit("Usage: `.hunt on/off/stats`")
+            return
+
+        option = command[1].lower()
+        if option == "on":
             if self._auto.state:
-                await event.edit('Auto Battle: already `on`.')
+                await event.edit("Hunting is already `on`.")
             else:
                 self._auto.start()
-                await event.edit('Auto Battle: changed state to `on`.')
-        elif event.raw_text.endswith('off'):
+                await event.edit("Hunting started.")
+                asyncio.create_task(self.send_hunt_periodically())
+        elif option == "off":
             if self._auto.state:
                 self._auto.stop(self._counter)
-                await event.edit('Auto Battle: changed state to `off`.')
+                await event.edit("Hunting stopped.")
             else:
-                await event.edit('Auto Battle: already `off`.')
+                await event.edit("Hunting is already `off`.")
+        elif option == "stats":
+            await event.edit(f"Total hunts: {self._counter.count}")
         else:
-            await event.edit('Unknown Error: cannot find auto battle state [on, off].')
+            await event.edit("Invalid option! Use `.hunt on/off/stats`.")
+
+    async def send_hunt_periodically(self):
+        """Sends /hunt command periodically until stopped."""
+        while self._auto.state and self._client.is_connected():
+            await asyncio.sleep(constants.PERIODICALLY_HUNT_SECONDS)
+            await self._client.send_message(entity=constants.HEXA_BOT_ID, message="/hunt")
 
     async def daily_limit(self, event):
-        """Handles the daily hunt limit."""
-        if not self._auto.state:
-            return
-        if 'Daily hunt limit reached' in event.raw_text:
-            await event.client.send_message(entity=constants.CHAT_ID, message=constants.HUNT_DAILY_LIMIT_REACHED)
+        """Handles the daily hunt limit message."""
+        if "Daily hunt limit reached" in event.raw_text:
+            await self._client.send_message(entity=constants.CHAT_ID, message=constants.HUNT_DAILY_LIMIT_REACHED)
             self._auto.stop(self._counter)
 
     async def hunt_or_pass(self, event):
-        """Decides whether to hunt or pass based on the event."""
+        """Decides whether to hunt or pass based on the event message."""
         if not self._auto.state:
             return
 
-        if 'shiny' in event.raw_text.lower() and event.raw_text.lower().endswith('found!'):
+        if "shiny" in event.raw_text.lower() and event.raw_text.lower().endswith("found!"):
             self._auto.stop(self._counter)
             await event.client.send_message(entity=constants.CHAT_ID, message=constants.SHINY_FOUND.format(event.client.me))
-
         elif "A wild" in event.raw_text:
             pok_name = event.raw_text.split("wild ")[1].split(" (")[0]
             logger.info(pok_name)
@@ -96,62 +106,16 @@ class PokemonHuntingEngine:
                 try:
                     await event.click(0, 0)
                 except MessageIdInvalidError:
-                    logger.exception('Failed to click the button for %s', pok_name)
+                    logger.exception(f"Failed to click the button for {pok_name}")
             else:
                 await asyncio.sleep(constants.COOLDOWN())
-                await event.client.send_message(entity=constants.HEXA_BOT_ID, message='/hunt')
-
-    async def battle_first(self, event):
-        """Handles the first battle action."""
-        if not self._auto.state:
-            return
-
-        if "Battle begins!" in event.raw_text:
-            wild_pokemon_name_match = re.search(r"Wild (\w+) \[.*\]\nLv\. \d+  •  HP \d+/\d+", event.raw_text)
-            if wild_pokemon_name_match:
-                pok_name = wild_pokemon_name_match.group(1)
-                wild_pokemon_hp_match = re.search(r"Wild .* \[.*\]\nLv\. \d+  •  HP (\d+)/(\d+)", event.raw_text)
-                if wild_pokemon_hp_match:
-                    wild_max_hp = int(wild_pokemon_hp_match.group(2))
-                    self._low_lvl = wild_max_hp <= 50
-                    logger.info('low lvl set to %s', self._low_lvl)
-                    await self._handle_battle_action(event, pok_name, self._low_lvl)
-
-    async def _handle_battle_action(self, event, pok_name: str, is_low_lvl: bool):
-        """Handles the battle action based on the Pokémon's level."""
-        if is_low_lvl:
-            await asyncio.sleep(constants.COOLDOWN())
-            try:
-                await event.click(text="Poke Balls")
-                logger.info('Clicked on Poke Balls')
-            except MessageIdInvalidError:
-                logger.error('Failed to click Poke Balls')
-        else:
-            await asyncio.sleep(2)
-            try:
-                await event.click(0, 0)
-            except MessageIdInvalidError:
-                logger.error('Failed to click the button for high-level Pokemon')
-
-    async def switch_pokemon(self, event):
-        """Switches to a Pokémon from the hunting team if available."""
-        if "Choose your next pokemon." in event.raw_text and self._auto.state:
-            for pokemon in constants.HUNTING_TEAM:
-                try:
-                    await event.click(text=pokemon)
-                    logger.info(f'Switched to {pokemon}')
-                    break
-                except MessageIdInvalidError:
-                    logger.error(f'Failed to switch to {pokemon}')
+                await event.client.send_message(entity=constants.HEXA_BOT_ID, message="/hunt")
 
     @property
-    def event_handlers(self) -> list:
-        """Returns a list of event handlers for auto-battle."""
+    def event_handlers(self):
+        """Returns a list of event handlers for auto-hunting."""
         return [
-            {'callback': self.auto_command, 'event': events.NewMessage(pattern=r"//auto battle (on|--f on|off)", outgoing=True)},
-            {'callback': self.daily_limit, 'event': events.NewMessage(chats=constants.HEXA_BOT_ID)},
-            {'callback': self.hunt_or_pass, 'event': events.NewMessage(chats=constants.HEXA_BOT_ID)},
-            {'callback': self.battle_first, 'event': events.NewMessage(chats=constants.HEXA_BOT_ID)},
-            {'callback': self._handle_battle_action, 'event': events.MessageEdited(chats=constants.HEXA_BOT_ID)},
-            {'callback': self.switch_pokemon, 'event': events.MessageEdited(chats=constants.HEXA_BOT_ID)},
+            {"callback": self.handle_automation_control_request, "event": events.NewMessage(pattern=r"\.hunt (on|off|stats)", outgoing=True)},
+            {"callback": self.daily_limit, "event": events.NewMessage(chats=constants.HEXA_BOT_ID)},
+            {"callback": self.hunt_or_pass, "event": events.NewMessage(chats=constants.HEXA_BOT_ID)},
         ]
