@@ -1,4 +1,15 @@
-class AutoBattleManager:
+import asyncio
+import logging
+import re
+
+from telethon import events
+from telethon.errors import MessageIdInvalidError
+
+import constants
+
+logger = logging.getLogger(__name__)
+
+class PokemonHuntingEngine:
     """Manages auto-battle functionality for the Userbot."""
 
     def __init__(self, client):
