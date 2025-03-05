@@ -9,6 +9,35 @@ import constants
 
 logger = logging.getLogger(__name__)
 
+class Counter:
+    """Tracks the number of hunts or battles."""
+    
+    def __init__(self):
+        self.count = 0
+
+    def increment(self):
+        """Increase the counter by 1."""
+        self.count += 1
+
+    def reset(self):
+        """Reset the counter to 0."""
+        self.count = 0
+
+class Auto:
+    """Handles the state of auto-battling."""
+    
+    def __init__(self):
+        self.state = False
+
+    def start(self):
+        """Starts the auto-battle mode."""
+        self.state = True
+
+    def stop(self, counter):
+        """Stops the auto-battle mode and resets the counter."""
+        self.state = False
+        counter.reset()
+
 class PokemonHuntingEngine:
     """Manages auto-battle functionality for the Userbot."""
 
@@ -126,19 +155,3 @@ class PokemonHuntingEngine:
             {'callback': self._handle_battle_action, 'event': events.MessageEdited(chats=constants.HEXA_BOT_ID)},
             {'callback': self.switch_pokemon, 'event': events.MessageEdited(chats=constants.HEXA_BOT_ID)},
         ]
-
-# Auto class definition
-class Auto:
-    """Handles auto-hunting state."""
-
-    def __init__(self):
-        self.state = False  # Default state is off
-
-    def start(self):
-        """Start auto-hunting."""
-        self.state = True
-
-    def stop(self, counter):
-        """Stop auto-hunting and reset the counter."""
-        self.state = False
-        counter.reset()
