@@ -10,7 +10,6 @@ from guesser import PokemonIdentificationEngine
 from hunter import PokemonHuntingEngine
 from afk import AFKManager
 from alive import AliveHandler
-from autobattle import AutoBattleManager  # Import AutoBattleManager
 
 HELP_MESSAGE = """**Help**
 
@@ -18,7 +17,7 @@ HELP_MESSAGE = """**Help**
 • `.alive` - Bot status
 • `.help` - Help menu
 • `.guess` (on/off/stats) - any guesses?
-• `.hunt` (on/off/stats) - hunting for poki (also enables AutoBattle)
+• `.hunt` (on/off/stats) - hunting for poki
 • `.list <category>` - List Pokémon by category
 • `.afk` (message) - Set AFK status
 • `.unafk` - Disable AFK status
@@ -41,15 +40,13 @@ class Manager:
         '_hunter',
         '_evaluator',
         '_afk_manager',
-        '_alive_handler',
-        '_auto_battle_manager'
+        '_alive_handler'
     )
 
     def __init__(self, client) -> None:
         self._client = client
         self._guesser = PokemonIdentificationEngine(client)
-        self._auto_battle_manager = AutoBattleManager(client)  # Initialize AutoBattleManager
-        self._hunter = PokemonHuntingEngine(client, self._auto_battle_manager)  # Pass AutoBattleManager
+        self._hunter = PokemonHuntingEngine(client)
         self._evaluator = ExpressionEvaluator(client)
         self._afk_manager = AFKManager(client)
         self._alive_handler = AliveHandler(client)
@@ -66,11 +63,6 @@ class Manager:
         for handler in self._afk_manager.get_event_handlers():
             self._client.add_event_handler(handler['callback'], handler['event'])
             logger.debug(f'[{self.__class__.__name__}] Added AFK event handler: `{handler["callback"].__name__}`')
-
-        # Add AutoBattle event handlers
-        for handler in self._auto_battle_manager.event_handlers:
-            self._client.add_event_handler(handler['callback'], handler['event'])
-            logger.debug(f'[{self.__class__.__name__}] Added AutoBattle event handler: `{handler["callback"].__name__}`')
 
         # Register event handlers
         for handler in self.event_handlers:
@@ -93,8 +85,8 @@ class Manager:
         await self._guesser.handle_automation_control_request(event)
 
     async def handle_hunter_automation_control_request(self, event) -> None:
-        """Handles user requests to enable/disable hunting & AutoBattle."""
-        await self._hunter.handle_automation_control_request(event)  # Already modified to control AutoBattle
+        """Handles user requests to enable/disable hunter automation."""
+        await self._hunter.handle_automation_control_request(event)
 
     async def list_pokemon(self, event) -> None:
         """Handles the `.list` command by showing Pokémon based on the specified category."""
