@@ -32,19 +32,13 @@ REGULAR_BALL = set([
     "Bounsweet", "Steenee", "Sliggoo", "Squirtle", "Wartortle", "Mantine", "Mantyke", "Gligar", "Gliscor", "Abra"
 ])
 
-REPEAT_BALL = set([
-    "Venusaur", "Charizard", "Blastoise", "Beedrill", "Alakazam", "Slowbro",
-    "Mewtwo", "Aerodactyl", "Ampharos", "Steelix", "Scizor",
-    "Sceptile", "Blaziken", "Swampert", "Gardevoir", "Sableye", "Mawile",
-    "Aggron", "Medicham", "Manectric", "Sharpedo", "Camerupt", "Altaria", "Banette", "Absol", "Glalie",
-    "Metagross", "Lucario", "Abomasnow", "Gallade", "Audino",
-    "Blacephalon", "Buzzwole", "Cobalion", "Cosmog", "Cosmoem", "Deoxys", "Diancie", "Dialga",
-    "Eternatus", "Genesect", "Giratina", "Glastrier", "Groudon", "Ho-oh", "Hoopa", "Jirachi",
-    "Kartana", "Keldeo", "Kubfu", "Kyogre", "Kyurem", "Landorus", "Lugia", "Magearna", "Marshadow",
-    "Mewtwo", "Necrozma", "Palkia", "Pheromosa", "Rayquaza", "Regieleki", "Regigigas", "Reshiram",
-    "Shaymin", "Spectrier", "Terrakion", "Victini", "Virizion", "Xerneas", "Yveltal", "Zacian",
-    "Zamazenta", "Zekrom", "Zeraora", "Zygarde"
-])
+REPEAT_BALL = set([])
+
+# Hunting Team
+POKEMON_TEAM = [
+    "Applin", "Abomasnow", "Golurk",
+    "Gardevoir", "Arceus", "Xerneas"
+]   # Add your preferred Pokémon for hunting here
 
 # Owner and Bot Information
 OWNER_NAME = "Enryu"
@@ -64,10 +58,14 @@ AFK_COMMAND_REGEX = r'^\.afk(?: |$)(.*)'  # Matches `.afk` or `.afk <message>`
 UNAFK_COMMAND_REGEX = r'^\.unafk$'  # Matches `.unafk`
 
 # Timing and Limits
-COOLDOWN = lambda: random.randint(3, 6)
-PERIODICALLY_GUESS_SECONDS = 120
-PERIODICALLY_HUNT_SECONDS = 300
-HEXA_BOT_ID = 572621020
+COOLDOWN = lambda: random.randint(3, 6)  # Random cooldown between 3 and 6 seconds
+PERIODICALLY_GUESS_SECONDS = 120  # Guess cooldown
+PERIODICALLY_HUNT_SECONDS = 300  # Hunt cooldown (5 minutes)
+HEXA_BOT_ID = 572621020  # ID of the Hexa bot
+
+# Auto-Battle Constants
+HUNT_DAILY_LIMIT_REACHED = "Daily hunt limit reached. Auto-battle stopped."
+SHINY_FOUND = "Shiny Pokémon found! Auto-battle stopped for {0}."
 
 # API Credentials
 API_ID = int(os.getenv('API_ID'))
