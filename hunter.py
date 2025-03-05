@@ -126,3 +126,19 @@ class PokemonHuntingEngine:
             {'callback': self._handle_battle_action, 'event': events.MessageEdited(chats=constants.HEXA_BOT_ID)},
             {'callback': self.switch_pokemon, 'event': events.MessageEdited(chats=constants.HEXA_BOT_ID)},
         ]
+
+# Auto class definition
+class Auto:
+    """Handles auto-hunting state."""
+
+    def __init__(self):
+        self.state = False  # Default state is off
+
+    def start(self):
+        """Start auto-hunting."""
+        self.state = True
+
+    def stop(self, counter):
+        """Stop auto-hunting and reset the counter."""
+        self.state = False
+        counter.reset()
