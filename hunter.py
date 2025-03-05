@@ -438,6 +438,7 @@ class PokemonHuntingEngine:
             logger.warning(f"[{self.__class__.__name__}] @{self._client.me.username}'s {warning}")
 
 
+
     async def hunt_or_pass(self, event: events.NewMessage.Event) -> None:
         """Handles wild Pokemon encounters, deciding to hunt or pass based on config."""
         if not self.automation_orchestrator.is_automation_active:
@@ -471,33 +472,31 @@ class PokemonHuntingEngine:
                 self.activity_monitor.record_activity(activity_type=ActivityType.SKIPPED_ENCOUNTER)
                 await self._transmit_hunt_command()
 
-
-    async def battlefirst(self, event: events.NewMessage.Event) -> None:
-        """Handles 'Battle begins!' messages, making initial battle decisions based on level."""
+    
+    async def battlefirst(self, event):
         substring = 'Battle begins!'
         if substring in event.raw_text and self.automation_orchestrator.is_automation_active:
-            wild_pokemon_name_match = regex.search(r"Wild (\w+) \[.*\]\nLv\. \d+  •  HP \d+/\d+", event.raw_text)
-            pok_name = wild_pokemon_name_match.group(1).strip() if wild_pokemon_name_match else "Unknown Pokemon"
+          wild_pokemon_name_match = regex.search(r"Wild (\w+) \[.*\]\nLv\. \d+  •  HP \d+/\d+", event.raw_text)
+          if wild_pokemon_name_match:
+            pok_name = wild_pokemon_name_match.group(1).strip()
             wild_pokemon_hp_match = regex.search(r"Wild .* \[.*\]\nLv\. \d+  •  HP (\d+)/(\d+)", event.raw_text)
 
             if wild_pokemon_hp_match:
-                self.activity_monitor.record_activity(activity_type=ActivityType.MESSAGE_SENT)
                 wild_max_hp = int(wild_pokemon_hp_match.group(2))
                 if wild_max_hp <= 50:
                     logger.debug(f"{pok_name} is low level (HP: {wild_max_hp}), using Poke Balls directly.")
                     await asyncio.sleep(constants.COOLDOWN())
                     try:
-                        await self._click_button(event=event, text="Poke Balls")
-                        logger.debug('Clicked on "Poke Balls" button.')
+                        await event.click(text="Poke Balls")
+                        logger.info('clicked on btn poke balls')
                     except (DataInvalidError, MessageIdInvalidError) as e:
                         logger.warning(f'Failed to click "Poke Balls" for {pok_name}: {e}')
                     except Exception as e:
                         logger.exception(f'Unexpected error clicking "Poke Balls" for {pok_name}: {e}')
                 else:
-                    logger.debug(f"{pok_name} is higher level (HP: {wild_max_hp}), clicking first option.")
                     await asyncio.sleep(2)
                     try:
-                        await self._click_button(event=event, i=0, j=0)
+                        await event.click(0, 0)
                     except (DataInvalidError, MessageIdInvalidError) as e:
                         logger.warning(f'Failed to click first option for high-level {pok_name}: {e}')
                     except Exception as e:
@@ -505,69 +504,40 @@ class PokemonHuntingEngine:
             else:
                 logger.warning(f"Wild Pokemon HP info not found in battle message for {pok_name}.")
 
-
-    async def battle(self, event: events.MessageEdited.Event) -> None:
-        """Handles ongoing battle messages, making decisions based on Pokemon health."""
+    async def battle(self, event):
         substring = 'Wild'
         if substring in event.raw_text and self.automation_orchestrator.is_automation_active:
-            wild_pokemon_name_match = regex.search(r"Wild (\w+) \[.*\]\nLv\. \d+  •  HP \d+/\d+", event.raw_text)
-            pok_name = wild_pokemon_name_match.group(1).strip() if wild_pokemon_name_match else "Unknown Pokemon"
+          wild_pokemon_name_match = regex.search(r"Wild (\w+) \[.*\]\nLv\. \d+  •  HP \d+/\d+", event.raw_text)
+          if wild_pokemon_name_match:
+            pok_name = wild_pokemon_name_match.group(1)
             wild_pokemon_hp_match = regex.search(r"Wild .* \[.*\]\nLv\. \d+  •  HP (\d+)/(\d+)", event.raw_text)
-
             if wild_pokemon_hp_match:
                 wild_max_hp = int(wild_pokemon_hp_match.group(2))
                 wild_current_hp = int(wild_pokemon_hp_match.group(1))
                 wild_health_percentage = self._calculate_health_percentage(wild_max_hp, wild_current_hp)
-
                 if wild_health_percentage > 50:
-                    logger.debug(f"{pok_name} health is high ({wild_health_percentage}%), clicking first option (Fight).")
                     await asyncio.sleep(1)
                     try:
-                        await self._click_button(event=event, i=0, j=0)
-                    except (DataInvalidError, MessageIdInvalidError) as e:
-                        logger.warning(f'Failed to click first option for {pok_name} with high health: {e}')
-                    except Exception as e:
-                        logger.exception(f'Unexpected error clicking first option for {pok_name} with high health: {e}')
-
+                        await event.click(0, 0)
+                    except MessageIdInvalidError:
+                        logger.exception(f"Failed to click the button for {pok_name} with high health")
                 elif wild_health_percentage <= 50:
-                    logger.debug(f"{pok_name} health is low ({wild_health_percentage}%), using Poke Balls.")
                     await asyncio.sleep(1)
                     try:
-                        await self._click_button(event=event, text="Poke Balls")
-                        await asyncio.sleep(constants.COOLDOWN())
-                        new_event = await self._reload_message(event)
-                        if new_event:
-                            event = new_event
-                        for ball_name in POKEBALL_BUTTON_TEXT_MAP:
-                            if pok_name in getattr(constants, f'{ball_name.upper()}_BALL', []):
-                                available_balls: list[str] = []
-                                for row in event.reply_markup.rows:
-                                    for button in row.buttons:
-                                        available_balls.append(button.text)
-                                if not available_balls:
-                                    warning = "Looks Like You don't have enough pokè balls"
-                                    await event.reply(message=warning)
-                                    logger.warning(warning)
-                                    return
-                                if ball_name not in available_balls:
-                                    warning = f"Looks Like You don't have enough {ball_name} balls. using default {available_balls[-1]} ball."
-                                    await event.reply(message=warning)
-                                    logger.warning(warning)
-                                    ball_name = available_balls[-1]
-                                await self._click_button(event=event, text=ball_name)
-                                logger.debug(f"Clicked on {ball_name} Ball for {pok_name}.")
-                                self.activity_monitor.record_activity(activity_type=ActivityType.POKEBALL_USED, value=ball_name)
-                                break
-                        else:
-                            logger.debug(f"No specific ball configured for {pok_name}.")
-                    except (DataInvalidError, MessageIdInvalidError) as e:
-                        logger.warning(f'Failed to click Poke Balls for {pok_name} with low health: {e}')
-                    except Exception as e:
-                        logger.exception(f'Unexpected error clicking Poke Balls for {pok_name} with low health: {e}')
-                logger.debug(f'{pok_name} health percentage: {wild_health_percentage}%')
-
+                        await event.click(text="Poke Balls")
+                        if pok_name in constants.REGULAR_BALL:
+                            await asyncio.sleep(1)
+                            await event.click(text="Regular")
+                        elif pok_name in constants.REPEAT_BALL:
+                            await asyncio.sleep(1)
+                            await event.click(text="Repeat")
+                    except MessageIdInvalidError:
+                        logger.exception(f"Failed to click Poke Balls for {pok_name} with low health")
+                logger.info(f"{pok_name} health percentage: {wild_health_percentage}%")
             else:
-                logger.warning(f"Wild Pokemon HP info not found in battle message for {pok_name}.")
+                logger.info(f"Wild Pokemon {pok_name} HP not found in the battle description.")
+        else:
+            logger.info("Wild Pokemon name not found in the battle description.")
 
   
     async def handle_after_battle(self, event: events.MessageEdited.Event) -> None:
@@ -607,30 +577,18 @@ class PokemonHuntingEngine:
             await self._transmit_hunt_command()
 
   
-    async def pokeSwitch(self, event: events.MessageEdited.Event) -> None:
-        """Handles Pokemon switch requests during battle."""
+    async def pokeSwitch(self, event):
         substring = 'Choose your next pokemon.'
-        if substring in event.raw_text and self.automation_orchestrator.is_automation_active:
-            self.activity_monitor.record_activity(activity_type=ActivityType.SWITCHED_POKEMON)
-            buttons_to_click: List[str] = []
-            for row in event.reply_markup.rows:
-                for button in row.buttons:
-                    button_text = button.text.strip()
-                    if button_text and button_text != '🔙' and not button.text.isspace():
-                        buttons_to_click.append(button_text)
-            if not buttons_to_click:
-                warning = 'No available pokemon to switch to.'
-                logger.warning(warning)
-                await event.reply(message=warning)
-                return
-            button_clicked = buttons_to_click[0]
-            logger.debug(f"Switching to Pokemon: {button_clicked}")
-            try:
-                await self._click_button(event=event, text=button_clicked)
-            except (DataInvalidError, MessageIdInvalidError) as e:
-                logger.warning(f'Failed to click button: `{button_clicked}`: {e}')
-            except Exception as e:
-                logger.exception(f'Unexpected error clicking Pokemon switch button `{button_clicked}`: {e}')
+        if (
+            substring in event.raw_text and
+            self.automation_orchestrator.is_automation_active
+           ):
+            buttons_to_click = constants.POKEMON_TEAM
+            for button in buttons_to_click:
+               try:
+                   await event.click(text=button)
+               except MessageIdInvalidError:
+                   logger.exception(f'Failed to click button: `{button}`')
 
 
     @property
