@@ -10,6 +10,7 @@ from guesser import PokemonIdentificationEngine
 from hunter import PokemonHuntingEngine
 from afk import AFKManager
 from alive import AliveHandler
+from autobattle import AutoBattleManager  # Import AutoBattleManager
 
 HELP_MESSAGE = """**Help**
 
@@ -17,7 +18,7 @@ HELP_MESSAGE = """**Help**
 • `.alive` - Bot status
 • `.help` - Help menu
 • `.guess` (on/off/stats) - any guesses?
-• `.hunt` (on/off/stats) - hunting for poki
+• `.hunt` (on/off/stats) - hunting for poki (also enables AutoBattle)
 • `.list <category>` - List Pokémon by category
 • `.afk` (message) - Set AFK status
 • `.unafk` - Disable AFK status
@@ -41,17 +42,17 @@ class Manager:
         '_evaluator',
         '_afk_manager',
         '_alive_handler',
-        '_auto_battle_manager'  # Add AutoBattleManager
+        '_auto_battle_manager'
     )
 
     def __init__(self, client) -> None:
         self._client = client
         self._guesser = PokemonIdentificationEngine(client)
-        self._hunter = PokemonHuntingEngine(client)
+        self._auto_battle_manager = AutoBattleManager(client)  # Initialize AutoBattleManager
+        self._hunter = PokemonHuntingEngine(client, self._auto_battle_manager)  # Pass AutoBattleManager
         self._evaluator = ExpressionEvaluator(client)
         self._afk_manager = AFKManager(client)
         self._alive_handler = AliveHandler(client)
-        self._auto_battle_manager = AutoBattleManager(client)  # Initialize AutoBattleManager
 
     def start(self) -> None:
         """Starts the Userbot's automations."""
@@ -92,8 +93,8 @@ class Manager:
         await self._guesser.handle_automation_control_request(event)
 
     async def handle_hunter_automation_control_request(self, event) -> None:
-        """Handles user requests to enable/disable hunter automation."""
-        await self._hunter.handle_automation_control_request(event)
+        """Handles user requests to enable/disable hunting & AutoBattle."""
+        await self._hunter.handle_automation_control_request(event)  # Already modified to control AutoBattle
 
     async def list_pokemon(self, event) -> None:
         """Handles the `.list` command by showing Pokémon based on the specified category."""
