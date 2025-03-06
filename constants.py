@@ -58,6 +58,9 @@ AFK_COMMAND_REGEX = r'^\.afk(?: |$)(.*)'  # Matches `.afk` or `.afk <message>`
 UNAFK_COMMAND_REGEX = r'^\.unafk$'  # Matches `.unafk`
 
 # Timing and Limits
+
+MAX_RETRIES = 5  # Number of times to retry clicking
+RETRY_COOLDOWN = 3  # Cooldown (in seconds) between retries
 COOLDOWN = lambda: random.randint(2, 3)  # Random cooldown between 3 and 6 seconds
 PERIODICALLY_GUESS_SECONDS = 120  # Guess cooldown
 PERIODICALLY_HUNT_SECONDS = 300  # Hunt cooldown (5 minutes)
