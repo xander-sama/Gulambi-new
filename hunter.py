@@ -577,34 +577,29 @@ class PokemonHuntingEngine:
             await self._transmit_hunt_command()
 
     async def pokeSwitch(self, event: events.MessageEdited.Event) -> None:
-        """Handles Pokémon switching when prompted to choose the next Pokémon in battle, with retries."""
-    
-        if "Choose your next pokemon." in event.raw_text and event.buttons:
-            button_texts = [button.text for row in event.buttons for button in row]
-            logger.info(f"Available switch buttons: {button_texts}")  # Debug log
-
-            max_retries = 5  
-            for attempt in range(max_retries):
-                for row in event.buttons:
-                    for button in row:
-                        if button.text.strip() in constants.POKEMON_TEAM:
-                            try:
-                                await asyncio.sleep(constants.COOLDOWN)  # Increase delay
-                                await event.click(text=button.text)
-                                logger.info(f"Switched to Pokémon: {button.text} (Attempt {attempt + 1})")
-                                return  
-                            except Exception as e:
-                                logger.warning(f"Failed to switch Pokémon on attempt {attempt + 1}: {e}")
-                                if attempt == max_retries - 2:
-                                    logger.warning("Final retry: Reloading message before last switch attempt...")
-                                    event = await self._reload_message(event)  # Reload before last attempt
-
-            if attempt < max_retries - 1:
-                logger.warning(f"Retrying Pokémon switch in 3 seconds... (Attempt {attempt + 2})")
-                await asyncio.sleep(3)
-
-        logger.error("All attempts to switch Pokémon failed.")
-        return await self.battle(event)
+        """Handles Pokemon switch requests during battle."""
+        substring = 'Choose your next pokemon.'
+        if substring in event.raw_text and self.automation_orchestrator.is_automation_active:
+            self.activity_monitor.record_activity(activity_type=ActivityType.SWITCHED_POKEMON)
+            buttons_to_click: List[str] = []
+            for row in event.reply_markup.rows:
+                for button in row.buttons:
+                    button_text = button.text.strip()
+                    if button_text and button_text != '🔙' and not button.text.isspace():
+                        buttons_to_click.append(button_text)
+            if not buttons_to_click:
+                warning = 'No available pokemon to switch to.'
+                logger.warning(warning)
+                await event.reply(message=warning)
+                return
+            button_clicked = buttons_to_click[0]
+            logger.debug(f"Switching to Pokemon: {button_clicked}")
+            try:
+                await self._click_button(event=event, text=button_clicked)
+            except (DataInvalidError, MessageIdInvalidError) as e:
+                logger.warning(f'Failed to click button: `{button_clicked}`: {e}')
+            except Exception as e:
+                logger.exception(f'Unexpected error clicking Pokemon switch button `{button_clicked}`: {e}')
 
     @property
     def event_handlers(self) -> List[Dict[str, Callable | events.NewMessage]]:
