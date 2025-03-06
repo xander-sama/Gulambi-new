@@ -580,26 +580,31 @@ class PokemonHuntingEngine:
         """Handles Pokémon switching when prompted to choose the next Pokémon in battle, with retries."""
     
         if "Choose your next pokemon." in event.raw_text and event.buttons:
-            max_retries = 5  # Number of retry attempts
+            button_texts = [button.text for row in event.buttons for button in row]
+            logger.info(f"Available switch buttons: {button_texts}")  # Debug log
+
+            max_retries = 5  
             for attempt in range(max_retries):
-                for row in event.buttons:  # Loop through button rows
-                    for button in row:  # Loop through buttons in a row
-                        if button.text in constants.POKEMON_TEAM:  # Fetch Pokémon names from constants
+                for row in event.buttons:
+                    for button in row:
+                        if button.text.strip() in constants.POKEMON_TEAM:
                             try:
-                                await asyncio.sleep(self.cooldown)  # Wait before clicking
-                                await event.click(text=button.text)  # Click the matching button
+                                await asyncio.sleep(constants.COOLDOWN)  # Increase delay
+                                await event.click(text=button.text)
                                 logger.info(f"Switched to Pokémon: {button.text} (Attempt {attempt + 1})")
-                                return  # Exit if successful
+                                return  
                             except Exception as e:
                                 logger.warning(f"Failed to switch Pokémon on attempt {attempt + 1}: {e}")
+                                if attempt == max_retries - 2:
+                                    logger.warning("Final retry: Reloading message before last switch attempt...")
+                                    event = await self._reload_message(event)  # Reload before last attempt
 
-            # If no successful click, wait 3 seconds before retrying
-            if attempt < max_retries - 1:  # Don't sleep after last attempt
+            if attempt < max_retries - 1:
                 logger.warning(f"Retrying Pokémon switch in 3 seconds... (Attempt {attempt + 2})")
                 await asyncio.sleep(3)
 
-        logger.error("All attempts to switch Pokémon failed.")  # If all attempts fail
-        return await self.battle(event)  # Handle failure case by continuing battle
+        logger.error("All attempts to switch Pokémon failed.")
+        return await self.battle(event)
 
     @property
     def event_handlers(self) -> List[Dict[str, Callable | events.NewMessage]]:
