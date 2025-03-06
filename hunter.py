@@ -578,7 +578,7 @@ class PokemonHuntingEngine:
 
     async def pokeSwitch(self, event: events.MessageEdited.Event) -> None:
     """Automatically switches Pokémon in battle by selecting any of the first six buttons."""
-    substring = 'Choose your next pokemon.'
+       substring = 'Choose your next pokemon.'
     if (
         substring in event.raw_text and
         self.automation_orchestrator.is_automation_active
