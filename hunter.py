@@ -589,7 +589,7 @@ class PokemonHuntingEngine:
                     buttons = event.message.buttons  # Get available button           
                     if buttons:
                         for row in buttons[:2]:  # Select from the first two rows (1 to 6)
-                        for button in row:
+                            for button in row:
                             await event.click(button)  # Click the button
                             logger.info(f"Switched to Pokémon: {button.text} (Attempt {attempt + 1})")
                             return  # Exit if successful
