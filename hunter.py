@@ -579,16 +579,16 @@ class PokemonHuntingEngine:
     async def pokeSwitch(self, event: events.MessageEdited.Event) -> None:
         """Automatically switches Pokémon in battle by selecting any of the first six buttons."""
         substring = 'Choose your next pokemon.'
-    if (
-        substring in event.raw_text and
-        self.automation_orchestrator.is_automation_active
-    ):
-        retries = 4  # Max 4 attempts
-        for attempt in range(retries):
-            try:
-                buttons = event.message.buttons  # Get available buttons
-                if buttons:
-                    for row in buttons[:2]:  # Select from the first two rows (1 to 6)
+        if (
+            substring in event.raw_text and
+            self.automation_orchestrator.is_automation_active
+        ):
+            retries = 4  # Max 4 attempts
+            for attempt in range(retries):
+                try:
+                    buttons = event.message.buttons  # Get available button           
+                    if buttons:
+                        for row in buttons[:2]:  # Select from the first two rows (1 to 6)
                         for button in row:
                             await event.click(button)  # Click the button
                             logger.info(f"Switched to Pokémon: {button.text} (Attempt {attempt + 1})")
