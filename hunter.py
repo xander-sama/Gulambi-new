@@ -547,7 +547,7 @@ class PokemonHuntingEngine:
 
         if any(
               substring in event.raw_text for substring
-              in ["fled", "fainted", "🥚", "You caught"]
+              in ["fled", "🥚", "You caught"]
            ):
             pd_match = regex.search(r"\+(\d+) 💵", event.raw_text)
             if pd_match:
