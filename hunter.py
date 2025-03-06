@@ -555,61 +555,61 @@ class PokemonHuntingEngine:
                 self.activity_monitor.record_activity(activity_type=ActivityType.POKE_DOLLARS_ACCRUED, value=int(pd))
             await self._transmit_hunt_command()
   
-    async def skip(self, event: events.NewMessage.Event) -> None:
-    """Handles trainer encounter skip."""
-    if not self.automation_orchestrator.is_automation_active:
-        return
+  async def skip(self, event: events.NewMessage.Event) -> None:
+        """Handles trainer encounter skip."""
+        if not self.automation_orchestrator.is_automation_active:
+            return
 
-    trainer_match = regex.search(r"expert trainer", event.raw_text.lower())
-    tm_match = regex.search(r"TM(\d+) 💿 found!", event.raw_text)
-    stone_match = regex.search(r"(.+) mega stone found!", event.raw_text.lower())
+        trainer_match = regex.search(r"expert trainer", event.raw_text.lower())
+        tm_match = regex.search(r"TM(\d+) 💿 found!", event.raw_text)
+        stone_match = regex.search(r"(.+) mega stone found!", event.raw_text.lower())
 
-    if trainer_match:
-        self.activity_monitor.record_activity(activity_type=ActivityType.SKIPPED_TRAINER)
-        await self._transmit_hunt_command()
-    elif tm_match:
-        tm = tm_match.group(1)
-        self.activity_monitor.record_activity(activity_type=ActivityType.ITEM_FOUND, value=f"TM{tm}")
-        await self._transmit_hunt_command()
-    elif stone_match:
-        stone = stone_match.group(1)
-        self.activity_monitor.record_activity(activity_type=ActivityType.ITEM_FOUND, value=f"{stone.capitalize()} stone")
-        await self._transmit_hunt_command()
+        if trainer_match:
+            self.activity_monitor.record_activity(activity_type=ActivityType.SKIPPED_TRAINER)
+            await self._transmit_hunt_command()
+        elif tm_match:
+            tm = tm_match.group(1)
+            self.activity_monitor.record_activity(activity_type=ActivityType.ITEM_FOUND, value=f"TM{tm}")
+            await self._transmit_hunt_command()
+        elif stone_match:
+            stone = stone_match.group(1)
+            self.activity_monitor.record_activity(activity_type=ActivityType.ITEM_FOUND, value=f"{stone.capitalize()} stone")
+            await self._transmit_hunt_command()
 
-async def pokeSwitch(self, event: events.MessageEdited.Event) -> None:
-    """Automatically switches Pokémon in battle in order, retrying up to 4 times if ignored."""
-    substring = 'Choose your next pokemon.'
-    if (
-        substring in event.raw_text and
-        self.automation_orchestrator.is_automation_active
-    ):
-        for button in constants.POKEMON_TEAM:  # Iterate over Pokémon team in order
-            retries = 4  # Max 4 attempts
-            for attempt in range(retries):
-                try:
-                    await event.click(text=button)  # Attempt to switch Pokémon
-                    logger.info(f"Switched to Pokémon: {button} (Attempt {attempt + 1})")
-                    return  # Exit function if successful
-                except MessageIdInvalidError:
-                    logger.exception(f'Failed to click button: `{button}` (Attempt {attempt + 1})')
-                except Exception as e:
-                    logger.exception(f"Unexpected error switching Pokémon: {e} (Attempt {attempt + 1})")
+    async def pokeSwitch(self, event: events.MessageEdited.Event) -> None:
+        """Automatically switches Pokémon in battle in order, retrying up to 4 times if ignored."""
+        substring = 'Choose your next pokemon.'
+        if (
+            substring in event.raw_text and
+            self.automation_orchestrator.is_automation_active
+        ):
+            for button in constants.POKEMON_TEAM:  # Iterate over Pokémon team in order
+                retries = 4  # Max 4 attempts
+                for attempt in range(retries):
+                    try:
+                        await event.click(text=button)  # Attempt to switch Pokémon
+                        logger.info(f"Switched to Pokémon: {button} (Attempt {attempt + 1})")
+                        return  # Exit function if successful
+                    except MessageIdInvalidError:
+                        logger.exception(f'Failed to click button: `{button}` (Attempt {attempt + 1})')
+                    except Exception as e:
+                        logger.exception(f"Unexpected error switching Pokémon: {e} (Attempt {attempt + 1})")
 
-                if attempt < retries - 1:  # Don't sleep after the last attempt
-                    logger.warning(f"Retrying Pokémon switch in 3 seconds... (Attempt {attempt + 2})")
-                    await asyncio.sleep(3)  # Wait 3 seconds before retrying
+                    if attempt < retries - 1:  # Don't sleep after the last attempt
+                        logger.warning(f"Retrying Pokémon switch in 3 seconds... (Attempt {attempt + 2})")
+                        await asyncio.sleep(3)  # Wait 3 seconds before retrying
 
-        logger.error("All attempts to switch Pokémon failed.")  # If all attempts fail
+            logger.error("All attempts to switch Pokémon failed.")  # If all attempts fail
 
-@property
-def event_handlers(self) -> List[Dict[str, Callable | events.NewMessage]]:
-    """Returns a list of event handler definitions."""
-    return [
-        {'callback': self.handle_daily_quota_exceeded, 'event': events.NewMessage(chats=constants.HEXA_BOT_ID)},
-        {'callback': self.hunt_or_pass, 'event': events.NewMessage(chats=constants.HEXA_BOT_ID)},
-        {'callback': self.battlefirst, 'event': events.NewMessage(chats=constants.HEXA_BOT_ID)},
-        {'callback': self.battle, 'event': events.MessageEdited(chats=constants.HEXA_BOT_ID)},
-        {'callback': self.handle_after_battle, 'event': events.MessageEdited(chats=constants.HEXA_BOT_ID)},
-        {'callback': self.skip, 'event': events.NewMessage(chats=constants.HEXA_BOT_ID)},
-        {'callback': self.pokeSwitch, 'event': events.MessageEdited(chats=constants.HEXA_BOT_ID)}
-    ]
+    @property
+    def event_handlers(self) -> List[Dict[str, Callable | events.NewMessage]]:
+        """Returns a list of event handler definitions."""
+        return [
+            {'callback': self.handle_daily_quota_exceeded, 'event': events.NewMessage(chats=constants.HEXA_BOT_ID)},
+            {'callback': self.hunt_or_pass, 'event': events.NewMessage(chats=constants.HEXA_BOT_ID)},
+            {'callback': self.battlefirst, 'event': events.NewMessage(chats=constants.HEXA_BOT_ID)},
+            {'callback': self.battle, 'event': events.MessageEdited(chats=constants.HEXA_BOT_ID)},
+            {'callback': self.handle_after_battle, 'event': events.MessageEdited(chats=constants.HEXA_BOT_ID)},
+            {'callback': self.skip, 'event': events.NewMessage(chats=constants.HEXA_BOT_ID)},
+            {'callback': self.pokeSwitch, 'event': events.MessageEdited(chats=constants.HEXA_BOT_ID)}
+        ]
