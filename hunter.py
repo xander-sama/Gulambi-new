@@ -577,34 +577,29 @@ class PokemonHuntingEngine:
             await self._transmit_hunt_command()
 
     async def pokeSwitch(self, event: events.MessageEdited.Event) -> None:
-        """Automatically switches Pokémon in battle by selecting any of the first six buttons."""
-        substring = 'Choose your next pokemon.'
-        if (
-            substring in event.raw_text and
-            self.automation_orchestrator.is_automation_active
-        ):
-            retries = 4  # Max 4 attempts
-            for attempt in range(retries):
-                try:
-                    buttons = event.message.buttons  # Get available button           
-                    if buttons:
-                        for row in buttons[:2]:  # Select from the first two rows (1 to 6)
-                            for button in row:
-                                await event.click(button)  # Click the button
-                                logger.info(f"Switched to Pokémon: {button.text} (Attempt {attempt + 1})")
-                                return  # Exit if successful
-                    else:
-                        logger.warning("No buttons found for Pokémon selection.")
-                except MessageIdInvalidError:
-                    logger.exception(f"Failed to click button (Attempt {attempt + 1})")
-                except Exception as e:
-                    logger.exception(f"Unexpected error switching Pokémon: {e} (Attempt {attempt + 1})")
+    """Handles Pokémon switching when prompted to choose the next Pokémon in battle, with retries."""
+    
+    if "Choose your next pokemon." in event.raw_text and event.buttons:
+        max_retries = 5  # Number of retry attempts
+        for attempt in range(max_retries):
+            for row in event.buttons:  # Loop through button rows
+                for button in row:  # Loop through buttons in a row
+                    if button.text in constants.POKEMON_TEAM:  # Fetch Pokémon names from constants
+                        try:
+                            await asyncio.sleep(self.cooldown)  # Wait before clicking
+                            await event.click(text=button.text)  # Click the matching button
+                            logger.info(f"Switched to Pokémon: {button.text} (Attempt {attempt + 1})")
+                            return  # Exit if successful
+                        except Exception as e:
+                            logger.warning(f"Failed to switch Pokémon on attempt {attempt + 1}: {e}")
 
-                if attempt < retries - 1:  # Don't sleep after the last attempt
-                    logger.warning(f"Retrying Pokémon switch in 3 seconds... (Attempt {attempt + 2})")
-                    await asyncio.sleep(3)  # Wait 3 seconds before retrying
+            # If no successful click, wait 3 seconds before retrying
+            if attempt < max_retries - 1:  # Don't sleep after last attempt
+                logger.warning(f"Retrying Pokémon switch in 3 seconds... (Attempt {attempt + 2})")
+                await asyncio.sleep(3)
 
-            logger.error("All attempts to switch Pokémon failed.")  # If all attempts fail
+        logger.error("All attempts to switch Pokémon failed.")  # If all attempts fail
+        return await self.battle(event)  # Handle failure case by continuing battle
 
     @property
     def event_handlers(self) -> List[Dict[str, Callable | events.NewMessage]]:
