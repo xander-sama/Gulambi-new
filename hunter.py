@@ -483,7 +483,7 @@ class PokemonHuntingEngine:
 
             if wild_pokemon_hp_match:
                 wild_max_hp = int(wild_pokemon_hp_match.group(2))
-                if wild_max_hp <= 50:
+                if wild_max_hp <= 100:
                     logger.debug(f"{pok_name} is low level (HP: {wild_max_hp}), using Poke Balls directly.")
                     await asyncio.sleep(constants.COOLDOWN())
                     try:
@@ -515,13 +515,13 @@ class PokemonHuntingEngine:
                 wild_max_hp = int(wild_pokemon_hp_match.group(2))
                 wild_current_hp = int(wild_pokemon_hp_match.group(1))
                 wild_health_percentage = self._calculate_health_percentage(wild_max_hp, wild_current_hp)
-                if wild_health_percentage > 50:
+                if wild_health_percentage > 60:
                     await asyncio.sleep(1)
                     try:
                         await event.click(0, 0)
                     except MessageIdInvalidError:
                         logger.exception(f"Failed to click the button for {pok_name} with high health")
-                elif wild_health_percentage <= 50:
+                elif wild_health_percentage <= 60:
                     await asyncio.sleep(1)
                     try:
                         await event.click(text="Poke Balls")
@@ -547,7 +547,7 @@ class PokemonHuntingEngine:
 
         if any(
               substring in event.raw_text for substring
-              in ["fled", "🥚", "You caught"]
+              in ["fled", "💵", "You caught"]
            ):
             pd_match = regex.search(r"\+(\d+) 💵", event.raw_text)
             if pd_match:
@@ -604,4 +604,4 @@ class PokemonHuntingEngine:
             {'callback': self.handle_after_battle, 'event': events.MessageEdited(chats=constants.HEXA_BOT_ID)},
             {'callback': self.skip, 'event': events.NewMessage(chats=constants.HEXA_BOT_ID)},
             {'callback': self.pokeSwitch, 'event': events.MessageEdited(chats=constants.HEXA_BOT_ID)}
-        ]
+            ]
