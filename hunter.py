@@ -555,7 +555,7 @@ class PokemonHuntingEngine:
                 self.activity_monitor.record_activity(activity_type=ActivityType.POKE_DOLLARS_ACCRUED, value=int(pd))
             await self._transmit_hunt_command()
   
-  async def skip(self, event: events.NewMessage.Event) -> None:
+    async def skip(self, event: events.NewMessage.Event) -> None:
         """Handles trainer encounter skip."""
         if not self.automation_orchestrator.is_automation_active:
             return
