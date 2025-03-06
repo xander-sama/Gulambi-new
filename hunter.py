@@ -577,21 +577,21 @@ class PokemonHuntingEngine:
             await self._transmit_hunt_command()
 
     async def pokeSwitch(self, event: events.MessageEdited.Event) -> None:
-    """Handles Pokémon switching when prompted to choose the next Pokémon in battle, with retries."""
+        """Handles Pokémon switching when prompted to choose the next Pokémon in battle, with retries."""
     
-    if "Choose your next pokemon." in event.raw_text and event.buttons:
-        max_retries = 5  # Number of retry attempts
-        for attempt in range(max_retries):
-            for row in event.buttons:  # Loop through button rows
-                for button in row:  # Loop through buttons in a row
-                    if button.text in constants.POKEMON_TEAM:  # Fetch Pokémon names from constants
-                        try:
-                            await asyncio.sleep(self.cooldown)  # Wait before clicking
-                            await event.click(text=button.text)  # Click the matching button
-                            logger.info(f"Switched to Pokémon: {button.text} (Attempt {attempt + 1})")
-                            return  # Exit if successful
-                        except Exception as e:
-                            logger.warning(f"Failed to switch Pokémon on attempt {attempt + 1}: {e}")
+        if "Choose your next pokemon." in event.raw_text and event.buttons:
+            max_retries = 5  # Number of retry attempts
+            for attempt in range(max_retries):
+                for row in event.buttons:  # Loop through button rows
+                    for button in row:  # Loop through buttons in a row
+                        if button.text in constants.POKEMON_TEAM:  # Fetch Pokémon names from constants
+                            try:
+                                await asyncio.sleep(self.cooldown)  # Wait before clicking
+                                await event.click(text=button.text)  # Click the matching button
+                                logger.info(f"Switched to Pokémon: {button.text} (Attempt {attempt + 1})")
+                                return  # Exit if successful
+                            except Exception as e:
+                                logger.warning(f"Failed to switch Pokémon on attempt {attempt + 1}: {e}")
 
             # If no successful click, wait 3 seconds before retrying
             if attempt < max_retries - 1:  # Don't sleep after last attempt
