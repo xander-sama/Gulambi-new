@@ -578,14 +578,14 @@ class PokemonHuntingEngine:
 
   
     async def pokeSwitch(self, event):
-    substring = 'Choose your next pokemon.'
-    if (
-        substring in event.raw_text and
-        self.automation_orchestrator.is_automation_active
-    ):
-        buttons_to_click = constants.POKEMON_TEAM  # Pokémon team in order
-        for button in buttons_to_click:
-            try:
+            substring = 'Choose your next pokemon.'
+        if (
+            substring in event.raw_text and
+            self.automation_orchestrator.is_automation_active
+        ):
+            buttons_to_click = constants.POKEMON_TEAM  # Pokémon team in order
+            for button in buttons_to_click:
+                try:
                 await event.click(text=button)  # Click the first available Pokémon
                 logger.info(f"Switched to Pokémon: {button}")
                 break  # Stop looping after a successful switch
