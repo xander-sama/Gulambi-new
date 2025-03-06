@@ -590,21 +590,21 @@ class PokemonHuntingEngine:
                     if buttons:
                         for row in buttons[:2]:  # Select from the first two rows (1 to 6)
                             for button in row:
-                            await event.click(button)  # Click the button
-                            logger.info(f"Switched to Pokémon: {button.text} (Attempt {attempt + 1})")
-                            return  # Exit if successful
-                else:
-                    logger.warning("No buttons found for Pokémon selection.")
-            except MessageIdInvalidError:
-                logger.exception(f"Failed to click button (Attempt {attempt + 1})")
-            except Exception as e:
-                logger.exception(f"Unexpected error switching Pokémon: {e} (Attempt {attempt + 1})")
+                                await event.click(button)  # Click the button
+                                logger.info(f"Switched to Pokémon: {button.text} (Attempt {attempt + 1})")
+                                return  # Exit if successful
+                    else:
+                        logger.warning("No buttons found for Pokémon selection.")
+                except MessageIdInvalidError:
+                    logger.exception(f"Failed to click button (Attempt {attempt + 1})")
+                except Exception as e:
+                    logger.exception(f"Unexpected error switching Pokémon: {e} (Attempt {attempt + 1})")
 
-            if attempt < retries - 1:  # Don't sleep after the last attempt
-                logger.warning(f"Retrying Pokémon switch in 3 seconds... (Attempt {attempt + 2})")
-                await asyncio.sleep(3)  # Wait 3 seconds before retrying
+                if attempt < retries - 1:  # Don't sleep after the last attempt
+                    logger.warning(f"Retrying Pokémon switch in 3 seconds... (Attempt {attempt + 2})")
+                    await asyncio.sleep(3)  # Wait 3 seconds before retrying
 
-        logger.error("All attempts to switch Pokémon failed.")  # If all attempts fail
+            logger.error("All attempts to switch Pokémon failed.")  # If all attempts fail
 
     @property
     def event_handlers(self) -> List[Dict[str, Callable | events.NewMessage]]:
