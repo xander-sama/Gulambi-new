@@ -515,22 +515,22 @@ class PokemonHuntingEngine:
                                     logger.warning(f"Failed to catch {pok_name}, retrying...")
                                     continue  # Try again
 
-                        except (DataInvalidError, MessageIdInvalidError) as e:
-                            logger.warning(f'Failed to throw a Regular Poké Ball for {pok_name}: {e}')
-                        except Exception as e:
-                            logger.exception(f'Unexpected error trying to catch {pok_name}: {e}')
-                            break  # Stop retrying if an unexpected issue occurs
+                            except (DataInvalidError, MessageIdInvalidError) as e:
+                                logger.warning(f'Failed to throw a Regular Poké Ball for {pok_name}: {e}')
+                            except Exception as e:
+                                logger.exception(f'Unexpected error trying to catch {pok_name}: {e}')
+                                break  # Stop retrying if an unexpected issue occurs
 
+                    else:
+                        await asyncio.sleep(2)
+                        try:
+                            await event.click(0, 0)  # Attack or other option for high HP Pokémon
+                        except (DataInvalidError, MessageIdInvalidError) as e:
+                            logger.warning(f'Failed to click first option for high-level {pok_name}: {e}')
+                        except Exception as e:
+                            logger.exception(f'Unexpected error clicking first option for high-level {pok_name}: {e}')
                 else:
-                    await asyncio.sleep(2)
-                    try:
-                        await event.click(0, 0)  # Attack or other option for high HP Pokémon
-                    except (DataInvalidError, MessageIdInvalidError) as e:
-                        logger.warning(f'Failed to click first option for high-level {pok_name}: {e}')
-                    except Exception as e:
-                        logger.exception(f'Unexpected error clicking first option for high-level {pok_name}: {e}')
-            else:
-                logger.warning(f"Wild Pokemon HP info not found in battle message for {pok_name}.")
+                    logger.warning(f"Wild Pokemon HP info not found in battle message for {pok_name}.")
 
 
     
