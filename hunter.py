@@ -450,23 +450,23 @@ class PokemonHuntingEngine:
             logger.info("Clicked 'Poke Balls' button.")
             await asyncio.sleep(1)  # Wait for UI update
 
-        # Try clicking one of the available Poké Balls
-        for ball in ["Regular", "Repeat"]:
-            try:
-                await event.click(text=ball)
-                logger.info(f"Clicked '{ball}' Poké Ball.")
-                return
-            except Exception:
-                continue  # If button not found, try the next one
+            # Try clicking one of the available Poké Balls
+            for ball in ["Regular", "Repeat"]:
+                try:
+                    await event.click(text=ball)
+                    logger.info(f"Clicked '{ball}' Poké Ball.")
+                    return
+                except Exception:
+                    continue  # If button not found, try the next one
 
-        # If no Poké Ball is available, wait 60 seconds and retry
-        logger.warning("No Poké Ball available to click. Retrying in 60 seconds.")
-        await asyncio.sleep(60)
+            # If no Poké Ball is available, wait 60 seconds and retry
+            logger.warning("No Poké Ball available to click. Retrying in 60 seconds.")
+            await asyncio.sleep(60)
 
-        if self.automation_orchestrator.is_automation_active:
-            await self._transmit_hunt_command()  # Retry hunt after cooldown
-    except Exception as e:
-        logger.warning(f"Failed to click 'Poke Balls': {e}")
+            if self.automation_orchestrator.is_automation_active:
+                await self._transmit_hunt_command()  # Retry hunt after cooldown
+        except Exception as e:
+            logger.warning(f"Failed to click 'Poke Balls': {e}")
 
 
     
