@@ -617,7 +617,6 @@ class PokemonHuntingEngine:
         return [
             {'callback': self.handle_daily_quota_exceeded, 'event': events.NewMessage(chats=constants.HEXA_BOT_ID)},
             {'callback': self.hunt_or_pass, 'event': events.NewMessage(chats=constants.HEXA_BOT_ID)},
-            {'callback': self.battlefirst, 'event': events.NewMessage(chats=constants.HEXA_BOT_ID)},
             {'callback': self.battle, 'event': events.MessageEdited(chats=constants.HEXA_BOT_ID)},
             {'callback': self.handle_after_battle, 'event': events.MessageEdited(chats=constants.HEXA_BOT_ID)},
             {'callback': self.skip, 'event': events.NewMessage(chats=constants.HEXA_BOT_ID)},
