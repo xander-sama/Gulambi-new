@@ -519,56 +519,56 @@ class PokemonHuntingEngine:
                 pok_name = wild_pokemon_name_match.group(1).strip()
                 wild_pokemon_hp_match = regex.search(r"Wild .* \[.*\]\nLv\. \d+  •  HP (\d+)/(\d+)", event.raw_text)
 
-            if wild_pokemon_hp_match:
-                wild_max_hp = int(wild_pokemon_hp_match.group(2))
+                if wild_pokemon_hp_match:
+                    wild_max_hp = int(wild_pokemon_hp_match.group(2))
                 
-                if wild_max_hp <= 100:
-                    logger.debug(f"{pok_name} is low level (HP: {wild_max_hp}), attempting to catch it.")
+                    if wild_max_hp <= 100:
+                        logger.debug(f"{pok_name} is low level (HP: {wild_max_hp}), attempting to catch it.")
 
-                    while True:  # Keep trying until Pokémon is caught or flees
-                        await asyncio.sleep(constants.COOLDOWN())
+                        while True:  # Keep trying until Pokémon is caught or flees
+                            await asyncio.sleep(constants.COOLDOWN())
+                            try:
+                                # Step 1: Click "Poke Balls" to open the selection menu
+                                await event.click(text="Poke Balls")
+                                logger.info(f'Opened Poké Ball menu for {pok_name}')
+
+                                await asyncio.sleep(1)  # Wait for the menu to load
+
+                                # Step 2: Click "Regular" to throw the ball
+                                await event.click(text="Regular")
+                                logger.info(f'Threw a Regular Poké Ball at {pok_name}')
+
+                                # Step 3: Wait for the response
+                                response = await self.wait_for_event()
+
+                                if response and "caught" in response.raw_text:
+                                    logger.info(f"{pok_name} was caught successfully!")
+                                    break  # Stop retrying
+
+                                elif response and "fled" in response.raw_text:
+                                    logger.warning(f"{pok_name} fled from battle.")
+                                    break  # Stop retrying
+
+                                else:
+                                    logger.warning(f"Failed to catch {pok_name}, retrying...")
+                                    continue  # Try again
+
+                            except (DataInvalidError, MessageIdInvalidError) as e:
+                                logger.warning(f'Failed to throw a Regular Poké Ball for {pok_name}: {e}')
+                            except Exception as e:
+                                logger.exception(f'Unexpected error trying to catch {pok_name}: {e}')
+                                break  # Stop retrying if an unexpected issue occurs
+
+                    else:
+                        await asyncio.sleep(2)
                         try:
-                            # Step 1: Click "Poke Balls" to open the selection menu
-                            await event.click(text="Poke Balls")
-                            logger.info(f'Opened Poké Ball menu for {pok_name}')
-
-                            await asyncio.sleep(1)  # Wait for the menu to load
-
-                            # Step 2: Click "Regular" to throw the ball
-                            await event.click(text="Regular")
-                            logger.info(f'Threw a Regular Poké Ball at {pok_name}')
-
-                            # Step 3: Wait for the response
-                            response = await self.wait_for_event()
-
-                            if response and "caught" in response.raw_text:
-                                logger.info(f"{pok_name} was caught successfully!")
-                                break  # Stop retrying
-
-                            elif response and "fled" in response.raw_text:
-                                logger.warning(f"{pok_name} fled from battle.")
-                                break  # Stop retrying
-
-                            else:
-                                logger.warning(f"Failed to catch {pok_name}, retrying...")
-                                continue  # Try again
-
+                            await event.click(0, 0)  # Attack or other option for high HP Pokémon
                         except (DataInvalidError, MessageIdInvalidError) as e:
-                            logger.warning(f'Failed to throw a Regular Poké Ball for {pok_name}: {e}')
+                            logger.warning(f'Failed to click first option for high-level {pok_name}: {e}')
                         except Exception as e:
-                            logger.exception(f'Unexpected error trying to catch {pok_name}: {e}')
-                            break  # Stop retrying if an unexpected issue occurs
-
-                else:
-                    await asyncio.sleep(2)
-                    try:
-                        await event.click(0, 0)  # Attack or other option for high HP Pokémon
-                    except (DataInvalidError, MessageIdInvalidError) as e:
-                        logger.warning(f'Failed to click first option for high-level {pok_name}: {e}')
-                    except Exception as e:
                         logger.exception(f'Unexpected error clicking first option for high-level {pok_name}: {e}')
-            else:
-                logger.warning(f"Wild Pokemon HP info not found in battle message for {pok_name}.")
+                else:
+                    logger.warning(f"Wild Pokemon HP info not found in battle message for {pok_name}.")
 
     
     async def battle(self, event):
