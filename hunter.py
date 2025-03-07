@@ -439,16 +439,16 @@ class PokemonHuntingEngine:
 
 
     async def click_pokeball(self, event):
-    """Tries clicking 'Poke Balls' and selects an available Poké Ball. If none are available, retries after 60s."""
+        """Tries clicking 'Poke Balls' and selects an available Poké Ball. If none are available, retries after 60s."""
 
-    if not self.automation_orchestrator.is_automation_active:
-        return  # Stop execution if hunt is not active
+        if not self.automation_orchestrator.is_automation_active:
+            return  # Stop execution if hunt is not active
 
-    try:
-        # Click "Poke Balls" button
-        await event.click(text="Poke Balls")
-        logger.info("Clicked 'Poke Balls' button.")
-        await asyncio.sleep(1)  # Wait for UI update
+        try:
+            # Click "Poke Balls" button
+            await event.click(text="Poke Balls")
+            logger.info("Clicked 'Poke Balls' button.")
+            await asyncio.sleep(1)  # Wait for UI update
 
         # Try clicking one of the available Poké Balls
         for ball in ["Regular", "Repeat"]:
