@@ -472,45 +472,7 @@ class PokemonHuntingEngine:
                 await self._transmit_hunt_command()
 
     
-    async def battlefirst(self, event):
-        substring = 'Battle begins!'
-        if substring in event.raw_text and self.automation_orchestrator.is_automation_active:
-            wild_pokemon_name_match = regex.search(r"Wild (\w+) \[.*\]\nLv\. \d+  •  HP \d+/\d+", event.raw_text)
-            if wild_pokemon_name_match:
-                pok_name = wild_pokemon_name_match.group(1).strip()
-                wild_pokemon_hp_match = regex.search(r"Wild .* \[.*\]\nLv\. \d+  •  HP (\d+)/(\d+)", event.raw_text)
-
-            if wild_pokemon_hp_match:
-                wild_max_hp = int(wild_pokemon_hp_match.group(2))
-                
-                if wild_max_hp <= 100:
-                    logger.debug(f"{pok_name} is low level (HP: {wild_max_hp}), attempting to catch it.")
-
-                    while True:  # Keep trying until Pokémon is caught or flees
-                        await asyncio.sleep(constants.COOLDOWN())
-                        try:
-                            # Step 1: Click "Poke Balls" to open the selection menu
-                            await event.click(text="Poke Balls")
-                            logger.info(f'Opened Poké Ball menu for {pok_name}')
-
-                            await asyncio.sleep(1)  # Wait for the menu to load
-
-                            # Step 2: Click "Regular" to throw the ball
-                            await event.click(text="Regular")
-                            logger.info(f'Threw a Regular Poké Ball at {pok_name}')
-
-                            # Step 3: Wait for the response (catch or flee message)
-                            response = await self.wait_for_event()
-
-                            if "caught" in response.raw_text:
-                                logger.info(f"{pok_name} was caught successfully!")
-                                break  # Stop retrying
-
-                            elif "fled" in response.raw_text:
-                                logger.warning(f"{pok_name} fled from battle.")
-                                break  # Stop retrying
-
-                            else:
+    
     async def battlefirst(self, event):
         substring = 'Battle begins!'
         if substring in event.raw_text and self.automation_orchestrator.is_automation_active:
