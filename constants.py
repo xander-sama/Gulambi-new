@@ -8,31 +8,38 @@ NEST_BALL = set([])
 ULTRA_BALL = set([])
 GREAT_BALL = set([])
 REGULAR_BALL = set([
-    "Magikarp", "Darumaka", "Darmanitan", "Wishiwashi", "Drakloak", "Duraludon", "Rotom", 
-    "Tentacruel", "Snorlax", "Overqwil", "Munchlax", "Kleavor", "Fennekin", "Delphox", "Braixen", 
-    "Axew", "Fraxure", "Haxorus", "Floette", "Flabebe", "Rufflet", "Porygon", "Porygon2", "Mankey", 
-    "Primeape", "Dratini", "Shellder", "Gible", "Gabite", "Dragonair", "Golett", "Goomy", "Vikavolt", 
-    "Vullaby", "Litwick", "Lampent", "Wimpod", "Buneary", "Ursaring", "Teddiursa", "Hawlucha", "Abra", 
-    "Kadabra", "Turtonator", "Jolteon", "Dwebble", "Crustle", "Starly", "Stantler", "Rhyhorn", "Staryu", 
-    "Starmie", "Tauros", "Lapras", "Vaporeon", "Cyndaquil", "Quilava", "Typhlosion", "Totodile", "Croconaw", 
-    "Feraligatr", "Espeon", "Slakoth", "Vigoroth", "Lotad", "Lombre", "Ludicolo", "Treecko", "Grovyle", 
-    "Electrike", "Growlithe", "Monferno", "Piplup", "Prinplup", "Chimchar", "Sirfetch'd", 
-    "Staravia", "Bagon", "Shelgon", "Salamence", "Tepig", "Pignite", "Spiritomb", "Togekiss", "Skorupi", 
-    "Drilbur", "Timburr", "Gurdurr", "Scraggy", "Scrafty", "Cofagrigus", "Zorua", "Zoroark", "Cinccino", 
-    "Frillish", "Jellicent", "Karrablast", "Escavalier", "Ferroseed", "Mienfoo", "Mienshao", "Cryogonal", 
-    "Shelmet", "Accelgor", "Helioptile", "Heliolisk", "Tyrunt", "Tyrantrum", "Sylveon", "Litleo", "Pyroar", 
-    "Chespin", "Quilladin", "Chesnaught", "Durant", "Deino", "Phantump", "Trevenant", "Pumpkaboo", "Gourgeist", 
-    "Popplio", "Brionne", "Litten", "Torracat", "Rowlet", "Dartrix", "Grookey", "Thwackey", "Rillaboom", 
-    "Scorbunny", "Raboot", "Orbeetle", "Rookidee", "Corvisquire", "Sobble", "Drizzile", "Inteleon", "Dracozolt", 
-    "Dracovish", "Morpeko", "Sneasler", "Toxapex", "Mareanie", "Volcarona", "Tentacool", "Larvesta", 
-    "Charmeleon", "Charmander", "Togetic", "Togepi", "Druddigon", "Dhelmise", "Runerigus", "Lucario", 
-    "Unfezant", "Tranquill", "Pidove", "Barraskewda", "Arrokuda", "Zubat", "Golbat", "Gastly", "Haunter", 
-    "Clauncher", "Clawitzer", "Froslass", "Cutiefly", "Ribombee", "Arctozolt", "Arctovish", "Chewtle", 
-    "Cufant", "Impidimp", "Morgrem", "Hatenna", "Hattrem", "Trumbeak", "Charjabug", "Rockruff", "Mudbray", 
-    "Bounsweet", "Steenee", "Sliggoo", "Squirtle", "Wartortle", "Mantine", "Mantyke", "Gligar", "Gliscor", "Abra"
+        "Abra", "Alakazam", "Applin", "Arrokuda", "Axew", "Barraskewda", "Bagon", 
+        "Braixen", "Brionne", "Buneary", "Chimchar", "Charmander", "Charmeleon", 
+        "Cinccino", "Conkeldurr", "Cryogonal", "Cutiefly", "Cyndaquil", "Dartrix", 
+        "Darumaka", "Dracovish", "Dracozolt", "Dragonair", "Dratini", "Druddigon", 
+        "Ducklett", "Dwebble", "Espeon", "Fennekin", "Flabebe", "Floette", "Frillish", 
+        "Fraxure", "Gabite", "Gible", "Golett", "Goomy", "Grookey", "Grovyle", "Gurdurr", 
+        "Hawlucha", "Heracross", "Impidimp", "Kadabra", "Lampent", "Lapras", "Litwick", 
+        "Lombre", "Lopunny", "Lotad", "Magikarp", "Mankey", "Mareanie", "Mimikyu", 
+        "Monferno", "Morgrem", "Morpeko", "Munchlax", "Oranguru", "Orbeetle", "Phantump", 
+        "Piplup", "Porygon", "Porygon2", "Porygon-Z", "Popplio", "Prinplup", "Primarina", 
+        "Primeape", "Quilava", "Rhyhorn", "Rookidee", "Rowlet", "Rufflet", "Shelgon", 
+        "Shellder", "Snorlax", "Squirtle", "Staravia", "Starly", "Staryu", "Swanna", 
+        "Teddiursa", "Tentacool", "Tentacruel", "Thwackey", "Timburr", "Togepi", "Togetic",
+        "Torracat", "Treecko", "Toxapex", "Trevenant", "Vikavolt", "Wartortle", "Wishiwashi", 
+        "Wimpod", "Hakamo-o", "Jangmo-o", "Sirfetch'd", "Mime Jr.", "Mr. Mime",
+        "Sliggoo", "Voltorb", "Wyrdeer", "Zorua", "Zoroark", "Kleavor"
 ])
 
-REPEAT_BALL = set([])
+REPEAT_BALL = set([
+        "Abomasnow", "Aerodactyl", "Ampharos", "Beldum", "Beedrill", "Blacephalon", 
+        "Blastoise", "Cobalion", "Cosmoem", "Cosmog", "Delphox", "Deoxys", "Dhelmise", 
+        "Dialga", "Drakloak", "Duraludon", "Darmanitan", "Eternatus", "Gallade", 
+        "Gardevoir", "Genesect", "Giratina", "Glastrier", "Golisopod", "Golurk", "Greninja", 
+        "Groudon", "Gyarados", "Haxorus", "Ho-oh", "Hoopa", "Jellicent", "Jirachi", "Jolteon", 
+        "Kartana", "Keldeo", "Kubfu", "Kyogre", "Kyurem", "Landorus", "Lapras", "Lugia", 
+        "Ludicolo", "Magearna", "Marshadow", "Meloetta", "Metang", "Mewtwo", "Necrozma", 
+        "Palkia", "Pheromosa", "Charizard", "Rayquaza", "Regieleki", "Regigigas", "Reshiram", 
+        "Rillaboom", "Rotom", "Sceptile", "Shaymin", "Spectrier", "Starmie", "Slakoth",
+        "Terrakion", "Togekiss", "Turtonator", "Ursaring", "Venusaur", "Victini", "Vigoroth",
+        "Virizion", "Xerneas", "Yveltal", "Zacian", "Zamazenta", "Zapdos", "Zekrom", "Zeraora", 
+        "Zygarde", "Arceus", "Darkrai", "Empoleon", "Goodra", "Lopunny", "Thundurus"
+])
 
 # Hunting Team
 POKEMON_TEAM = [
