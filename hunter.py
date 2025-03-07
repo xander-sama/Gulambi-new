@@ -438,6 +438,40 @@ class PokemonHuntingEngine:
             logger.warning(f"[{self.__class__.__name__}] @{self._client.me.username}'s {warning}")
 
 
+    async def hunt_or_pass(self, event: events.NewMessage.Event) -> None:
+        """Handles wild Pokemon encounters, deciding to hunt or pass based on config."""
+        if not self.automation_orchestrator.is_automation_active:
+            return
+
+        if ('shiny' in event.raw_text.lower() and
+                event.raw_text.lower().endswith('found!')):
+            self.activity_monitor.record_activity(activity_type=ActivityType.RESPONSE_RECEIVED)
+            warning = 'Shiny Pokèmon found! Automated hunting deactivated.'
+            telemetry_report = self.activity_monitor.generate_telemetry_report()
+            message = f"<a href='tg://user?id={self._client.me.id}'>{self._client.me.first_name}</a> {warning}\n{telemetry_report}"
+            await self._client.send_message(entity=constants.CHAT_ID, message=message)
+            self.automation_orchestrator.deactivate_automation(self.activity_monitor)
+            logger.warning(f"[{self.__class__.__name__}] @{self._client.me.username}'s {warning}")
+
+        elif "A wild" in event.raw_text:
+            self.activity_monitor.record_activity(activity_type=ActivityType.RESPONSE_RECEIVED)
+            pok_name = event.raw_text.split("wild ")[1].split(" (")[0].strip()
+            logger.debug(f"Wild Pokemon encountered: {pok_name}")
+            for ball_name in POKEBALL_BUTTON_TEXT_MAP:
+                if pok_name in getattr(constants, f'{ball_name.upper()}_BALL', []):
+                    await asyncio.sleep(constants.COOLDOWN())
+                    try:
+                        await self._click_button(event=event, i=0, j=0)
+                        break
+                    except (DataInvalidError, MessageIdInvalidError) as e:
+                        logger.warning(f'Failed to click button for {pok_name}: {e}')
+                    except Exception as e:
+                        logger.exception(f"Unexpected error clicking button for {pok_name}: {e}")
+            else:
+                self.activity_monitor.record_activity(activity_type=ActivityType.SKIPPED_ENCOUNTER)
+                await self._transmit_hunt_command()
+
+    
     async def battle(self, event):
         #  Check if "Battle begins!" is in message & automation is active
         if "Battle begins!" in event.raw_text and self.automation_orchestrator.is_automation_active:
