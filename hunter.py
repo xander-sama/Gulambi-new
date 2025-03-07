@@ -452,32 +452,34 @@ class PokemonHuntingEngine:
                 logger.info(f"Attempt {attempt}: Clicked 'Poke Balls' button.")
                 await asyncio.sleep(2)  # Wait for UI update
 
-                    # Debug: Log available buttons
-        if event.reply_markup:
-                   available_buttons = [button.text for row in event.reply_markup.rows for button in row.buttons]
-                   logger.info(f"Available Buttons after clicking 'Poke Balls': {available_buttons}")
+            # Debug: Log available buttons
+            if event.reply_markup:
+                available_buttons = [button.text for row in event.reply_markup.rows for button in row.buttons]
+                logger.info(f"Available Buttons after clicking 'Poke Balls': {available_buttons}")
 
-                # Try clicking one of the available Poké Balls
-                for ball in ["Regular", "Repeat"]:
-                    try:
-                        await event.click(text=ball)
-                        logger.info(f"Attempt {attempt}: Clicked '{ball}' Poké Ball.")
-                        return  # Exit function if successful
-                    except Exception as e:                        logger.warning(f"Attempt {attempt}: Failed to click '{ball}' Poké Ball: {e}")
-                      continue  # Try the next ball
+            # Try clicking one of the available Poké Balls
+            for ball in ["Regular", "Repeat"]:
+                try:
+                    await event.click(text=ball)
+                    logger.info(f"Attempt {attempt}: Clicked '{ball}' Poké Ball.")
+                    return  # Exit function if successful
+                except Exception as e:
+                    logger.warning(f"Attempt {attempt}: Failed to click '{ball}' Poké Ball: {e}")
+                    continue  # Try the next ball
 
-                logger.warning(f"Attempt {attempt}: No Poké Ball clicked, retrying in 4 seconds...")
-                await asyncio.sleep(4)  # Wait before retrying
-            except Exception as e:
-                logger.warning(f"Attempt {attempt}: Failed to click 'Poke Balls': {e}")
-                await asyncio.sleep(4)  # Wait before retrying
+            logger.warning(f"Attempt {attempt}: No Poké Ball clicked, retrying in 4 seconds...")
+            await asyncio.sleep(4)  # Wait before retrying
+        except Exception as e:
+            logger.warning(f"Attempt {attempt}: Failed to click 'Poke Balls': {e}")
+            await asyncio.sleep(4)  # Wait before retrying
 
-            # If all retries fail, wait 60 seconds before retrying hunt
-            logger.warning("All attempts failed. Retrying hunt in 60 seconds.")
-            await asyncio.sleep(60)
+    # If all retries fail, wait 60 seconds before retrying hunt
+    logger.warning("All attempts failed. Retrying hunt in 60 seconds.")
+    await asyncio.sleep(60)
 
-            if self.automation_orchestrator.is_automation_active:
-                await self._transmit_hunt_command()  # Retry hunt after cooldown
+    if self.automation_orchestrator.is_automation_active:
+        await self._transmit_hunt_command()  # Retry hunt after cooldown
+
 
     
     async def hunt_or_pass(self, event: events.NewMessage.Event) -> None:
