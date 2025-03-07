@@ -441,7 +441,7 @@ class PokemonHuntingEngine:
     async def click_pokeball(self, event):
         """Tries clicking 'Poke Balls' and selects an available Poké Ball. If none are available, retries after 60s."""
     
-            if not self.automation_orchestrator.is_automation_active:
+        if not self.automation_orchestrator.is_automation_active:
             return
 
             try:
