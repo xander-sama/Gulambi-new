@@ -521,7 +521,7 @@ class PokemonHuntingEngine:
 
                 if wild_pokemon_hp_match:
                     wild_max_hp = int(wild_pokemon_hp_match.group(2))
-                
+
                     if wild_max_hp <= 100:
                         logger.debug(f"{pok_name} is low level (HP: {wild_max_hp}), attempting to catch it.")
 
@@ -538,8 +538,8 @@ class PokemonHuntingEngine:
                                 await event.click(text="Regular")
                                 logger.info(f'Threw a Regular Poké Ball at {pok_name}')
 
-                                # Step 3: Wait for the response
-                                response = await self.wait_for_event()
+                                # Step 3: Wait for the response (replace with your actual waiting method)
+                                response = await self.wait_for_event() if hasattr(self, 'wait_for_event') else None
 
                                 if response and "caught" in response.raw_text:
                                     logger.info(f"{pok_name} was caught successfully!")
@@ -553,22 +553,23 @@ class PokemonHuntingEngine:
                                     logger.warning(f"Failed to catch {pok_name}, retrying...")
                                     continue  # Try again
 
-                            except (DataInvalidError, MessageIdInvalidError) as e:
-                                logger.warning(f'Failed to throw a Regular Poké Ball for {pok_name}: {e}')
-                            except Exception as e:
-                                logger.exception(f'Unexpected error trying to catch {pok_name}: {e}')
-                                break  # Stop retrying if an unexpected issue occurs
-
-                    else:
-                        await asyncio.sleep(2)
-                        try:
-                            await event.click(0, 0)  # Attack or other option for high HP Pokémon
                         except (DataInvalidError, MessageIdInvalidError) as e:
-                            logger.warning(f'Failed to click first option for high-level {pok_name}: {e}')
+                            logger.warning(f'Failed to throw a Regular Poké Ball for {pok_name}: {e}')
                         except Exception as e:
-                        logger.exception(f'Unexpected error clicking first option for high-level {pok_name}: {e}')
+                            logger.exception(f'Unexpected error trying to catch {pok_name}: {e}')
+                            break  # Stop retrying if an unexpected issue occurs
+
                 else:
-                    logger.warning(f"Wild Pokemon HP info not found in battle message for {pok_name}.")
+                    await asyncio.sleep(2)
+                    try:
+                        await event.click(0, 0)  # Attack or other option for high HP Pokémon
+                    except (DataInvalidError, MessageIdInvalidError) as e:
+                        logger.warning(f'Failed to click first option for high-level {pok_name}: {e}')
+                    except Exception as e:
+                        logger.exception(f'Unexpected error clicking first option for high-level {pok_name}: {e}')
+            else:
+                logger.warning(f"Wild Pokemon HP info not found in battle message for {pok_name}.")
+
 
     
     async def battle(self, event):
