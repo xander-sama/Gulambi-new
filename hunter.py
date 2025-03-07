@@ -473,83 +473,78 @@ class PokemonHuntingEngine:
                 self.activity_monitor.record_activity(activity_type=ActivityType.SKIPPED_ENCOUNTER)
                 await self._transmit_hunt_command()
 
+    
     async def battlefirst(self, event):
         substring = 'Battle begins!'
         if substring in event.raw_text and self.automation_orchestrator.is_automation_active:
-            wild_pokemon_name_match = regex.search(r"Wild ([^\[]+?)\s*\[.*\]\nLv\. \d+\s+•\s+HP (\d+)/(\d+)", event.raw_text)
+          wild_pokemon_name_match = regex.search(r"Wild ([^\[]+?)\s*\[.*\]\nLv\. \d+\s+•\s+HP \d+/\d+", event.raw_text)
+          
+          if wild_pokemon_name_match:
+            pok_name = wild_pokemon_name_match.group(1).strip()
+            
+            wild_pokemon_hp_match = regex.search(r"Wild .* \[.*\]\nLv\. \d+\s+•\s+HP (\d+)/(\d+)", event.raw_text)
 
-            if wild_pokemon_name_match:
-                pok_name = wild_pokemon_name_match.group(1).strip()
-                wild_current_hp = int(wild_pokemon_name_match.group(2))
-                wild_max_hp = int(wild_pokemon_name_match.group(3))
-
-                if wild_current_hp <= 90:
-                    logger.debug(f"{pok_name} is low level (HP: {wild_current_hp}/{wild_max_hp}), using Poke Balls directly.")
-                
-                    retries = 3  # Number of retries for clicking "Poke Balls" and selecting the ball
-                    for attempt in range(retries):
-                        await asyncio.sleep(constants.COOLDOWN())
-                        try:
-                        # Click "Poke Balls"
-                            await event.click(text="Poke Balls")
-                            logger.info(f"Clicked on Poke Balls for {pok_name} (Attempt {attempt + 1})")
-
-                            await asyncio.sleep(2)  # Wait 2 seconds before selecting ball
-
-                        # Select the appropriate ball type
-                            if pok_name in constants.REGULAR_BALL:
-                                await event.click(text="Regular")
-                                logger.info(f"Selected Regular Ball for {pok_name}.")
-                            elif pok_name in constants.REPEAT_BALL:
-                                await event.click(text="Repeat")
-                                logger.info(f"Selected Repeat Ball for {pok_name}.")
-                            else:
-                                logger.warning(f"No ball type defined for {pok_name} in constants.py.")
-
-                            break  # Exit loop if successful
-
-                        except (DataInvalidError, MessageIdInvalidError) as e:
-                            logger.warning(f'Failed to click "Poke Balls" or select ball for {pok_name} (Attempt {attempt + 1}): {e}')
-                            if attempt == retries - 1:
-                                logger.error(f"Max retries reached for {pok_name}. Giving up.")
-                        except Exception as e:
-                            logger.exception(f'Unexpected error clicking "Poke Balls" or selecting ball for {pok_name}: {e}')
-                            break
+            if wild_pokemon_hp_match:
+                wild_max_hp = int(wild_pokemon_hp_match.group(2))
+                if wild_max_hp <= 90:
+                    logger.debug(f"{pok_name} is low level (HP: {wild_max_hp}), using Poke Balls directly.")
+                    await asyncio.sleep(constants.COOLDOWN())
+                    try:
+                        await event.click(text="Poke Balls")
+                        logger.info('clicked on btn poke balls')
+                    except (DataInvalidError, MessageIdInvalidError) as e:
+                        logger.warning(f'Failed to click "Poke Balls" for {pok_name}: {e}')
+                    except Exception as e:
+                        logger.exception(f'Unexpected error clicking "Poke Balls" for {pok_name}: {e}')
                 else:
-                    logger.debug(f"{pok_name} is high level (HP: {wild_current_hp}/{wild_max_hp}). Skipping Poke Balls.")
+                    await asyncio.sleep(2)
+                    try:
+                        await event.click(0, 0)
+                    except (DataInvalidError, MessageIdInvalidError) as e:
+                        logger.warning(f'Failed to click first option for high-level {pok_name}: {e}')
+                    except Exception as e:
+                        logger.exception(f'Unexpected error clicking first option for high-level {pok_name}: {e}')
+            else:
+                logger.warning(f"Wild Pokemon HP info not found in battle message for {pok_name}.")
 
-
-    
     async def battle(self, event):
         substring = 'Wild'
         if substring in event.raw_text and self.automation_orchestrator.is_automation_active:
-            wild_pokemon_name_match = regex.search(r"Wild ([^\[]+?)\s*\[.*\]\nLv\. \d+\s+•\s+HP \d+/\d+", event.raw_text)
-        
-            if wild_pokemon_name_match:
-                pok_name = wild_pokemon_name_match.group(1).strip()
-                wild_pokemon_hp_match = regex.search(r"Wild .* \[.*\]\nLv\. \d+\s+•\s+HP (\d+)/(\d+)", event.raw_text)
-            
-                if wild_pokemon_hp_match:
-                    wild_max_hp = int(wild_pokemon_hp_match.group(2))
-                    wild_current_hp = int(wild_pokemon_hp_match.group(1))
+          wild_pokemon_name_match = regex.search(r"Wild ([^\[]+?)\s*\[.*\]\nLv\. \d+\s+•\s+HP \d+/\d+", event.raw_text)
+          if wild_pokemon_name_match:
+            pok_name = wild_pokemon_name_match.group(1).strip()
+            wild_pokemon_hp_match = regex.search(r"Wild .* \[.*\]\nLv\. \d+  •  HP (\d+)/(\d+)", event.raw_text)
+            if wild_pokemon_hp_match:
+                wild_max_hp = int(wild_pokemon_hp_match.group(2))
+                wild_current_hp = int(wild_pokemon_hp_match.group(1))
                 
-                # Only handle high-level Pokémon (HP > 90)
-                    if wild_current_hp > 90:
-                        await asyncio.sleep(1)  # Small delay before attacking
-                        try:
-                            await event.click(0, 0)  # Click the first option (e.g., attack)
-                            logger.info(f"Attacked high-level {pok_name} (HP: {wild_current_hp}/{wild_max_hp})")
-                        except (DataInvalidError, MessageIdInvalidError) as e:
-                            logger.warning(f'Failed to click first option for high-level {pok_name}: {e}')
-                        except Exception as e:
-                            logger.exception(f'Unexpected error clicking first option for high-level {pok_name}: {e}')
-                    else:
-                    # Low-level Pokémon are handled by `battlefirst`, so no action is needed here
-                        logger.debug(f"{pok_name} is low level (HP: {wild_current_hp}/{wild_max_hp}). Skipping attack.")
-                else:
-                    logger.warning(f"Wild Pokemon HP info not found in battle message for {pok_name}.")
+                if wild_current_hp > 90:
+                    await asyncio.sleep(1)
+                    try:
+                        await event.click(0, 0)
+                    except (DataInvalidError, MessageIdInvalidError) as e:
+                        logger.warning(f'Failed to click first option for high-level {pok_name}: {e}')
+                    except Exception as e:
+                        logger.exception(f'Unexpected error clicking first option for high-level {pok_name}: {e}')
+                    
+                if wild_current_hp <= 90:
+                    await asyncio.sleep(1)
+                    try:
+                        await event.click(text="Poke Balls")
+                        if pok_name in constants.REGULAR_BALL:
+                            await asyncio.sleep(1)
+                            await event.click(text="Regular")
+                        elif pok_name in constants.REPEAT_BALL:
+                            await asyncio.sleep(1)
+                            await event.click(text="Repeat")
+                    except MessageIdInvalidError:
+                        logger.exception(f"Failed to click Poke Balls for {pok_name} with low health")
+                logger.info(f"{pok_name} health percentage: {wild_health_percentage}%")
             else:
-                logger.warning("Wild Pokemon name not found in the battle description.")
+                logger.info(f"Wild Pokemon {pok_name} HP not found in the battle description.")
+        else:
+            logger.info("Wild Pokemon name not found in the battle description.")
+
   
     async def handle_after_battle(self, event: events.MessageEdited.Event) -> None:
         """Handles messages indicating encounter skipped (fled, caught, etc.), and records Pokeball usage on catch."""
