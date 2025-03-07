@@ -511,13 +511,13 @@ class PokemonHuntingEngine:
                                 break  # Stop retrying
 
                             else:
-async def battlefirst(self, event):
-    substring = 'Battle begins!'
-    if substring in event.raw_text and self.automation_orchestrator.is_automation_active:
-        wild_pokemon_name_match = regex.search(r"Wild (\w+) \[.*\]\nLv\. \d+  •  HP \d+/\d+", event.raw_text)
-        if wild_pokemon_name_match:
-            pok_name = wild_pokemon_name_match.group(1).strip()
-            wild_pokemon_hp_match = regex.search(r"Wild .* \[.*\]\nLv\. \d+  •  HP (\d+)/(\d+)", event.raw_text)
+    async def battlefirst(self, event):
+        substring = 'Battle begins!'
+        if substring in event.raw_text and self.automation_orchestrator.is_automation_active:
+            wild_pokemon_name_match = regex.search(r"Wild (\w+) \[.*\]\nLv\. \d+  •  HP \d+/\d+", event.raw_text)
+            if wild_pokemon_name_match:
+                pok_name = wild_pokemon_name_match.group(1).strip()
+                wild_pokemon_hp_match = regex.search(r"Wild .* \[.*\]\nLv\. \d+  •  HP (\d+)/(\d+)", event.raw_text)
 
             if wild_pokemon_hp_match:
                 wild_max_hp = int(wild_pokemon_hp_match.group(2))
