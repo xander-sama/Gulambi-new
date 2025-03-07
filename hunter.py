@@ -471,83 +471,97 @@ class PokemonHuntingEngine:
                 self.activity_monitor.record_activity(activity_type=ActivityType.SKIPPED_ENCOUNTER)
                 await self._transmit_hunt_command()
 
-    
     async def battle(self, event):
-        #  Check if "Battle begins!" is in message & automation is active
         if "Battle begins!" in event.raw_text and self.automation_orchestrator.is_automation_active:
             logger.info("Battle has started!")
 
-            wild_pokemon_name_match = regex.search(r"Wild (\w+) \[.*\]\nLv\. \d+  •  HP \d+/\d+", event.raw_text)
-            if wild_pokemon_name_match:
-                pok_name = wild_pokemon_name_match.group(1).strip()
-                wild_pokemon_hp_match = regex.search(r"Wild .* \[.*\]\nLv\. \d+  •  HP (\d+)/(\d+)", event.raw_text)
+            # Debugging: Log the raw text
+            logger.info(f"Received battle message: {event.raw_text}")
 
-                if wild_pokemon_hp_match:
-                    wild_max_hp = int(wild_pokemon_hp_match.group(2))
-                    wild_current_hp = int(wild_pokemon_hp_match.group(1))
-                    wild_health_percentage = self._calculate_health_percentage(wild_max_hp, wild_current_hp)
+            # ✅ Extract Wild Pokémon Name & HP
+            wild_pokemon_match = regex.search(r"Wild (\w+).*?Lv\. (\d+)  •  HP (\d+)/(\d+)", event.raw_text)
+            if wild_pokemon_match:
+                pok_name = wild_pokemon_match.group(1).strip()
+                wild_level = int(wild_pokemon_match.group(2))
+                wild_current_hp = int(wild_pokemon_match.group(3))
+                wild_max_hp = int(wild_pokemon_match.group(4))
+                wild_health_percentage = self._calculate_health_percentage(wild_max_hp, wild_current_hp)
 
-                    #  Low-level Pokémon: Keep throwing Poké Balls until caught or fled
-                    if wild_max_hp <= 100:
-                        logger.info(f"{pok_name} is low level (HP: {wild_max_hp}), attempting to catch it.")
+                logger.info(f"Encountered {pok_name} (Lv. {wild_level}, HP: {wild_current_hp}/{wild_max_hp})")
 
-                        while True:  # Keep retrying until caught or fled
-                            await asyncio.sleep(2)  # Prevent spam
+                # ✅ Low-level Pokémon: Attempt to Catch
+                if wild_max_hp <= 100:
+                    logger.info(f"{pok_name} is low level, attempting to catch it.")
 
+                    while True:  # Retry until caught or fled
+                        await asyncio.sleep(2)  # Prevent spam
+
+                        try:
+                            # Click "Poke Balls"
+                            await event.click(text="Poke Balls")
+                            logger.info(f'Opened Poké Ball menu for {pok_name}')
+                            
+                            # ✅ Wait for Poké Ball Menu (Timeout: 5s)
                             try:
-                                await event.click(text="Poke Balls")
-                                logger.info(f'Opened Poké Ball menu for {pok_name}')
-                            
-                                await asyncio.sleep(1)  # Wait for menu
-                                await event.click(text="Regular")  # Use Regular Poké Ball
-                                logger.info(f'Threw a Regular Poké Ball at {pok_name}')
-                            
-                                #  Wait for bot response
-                                response = await self.wait_for_event()
+                                response = await asyncio.wait_for(self.wait_for_event(), timeout=5)
+                            except asyncio.TimeoutError:
+                                logger.warning("Poké Ball menu did not appear in time!")
+                                continue  # Retry
 
-                                if response and "caught" in response.raw_text:
+                            await asyncio.sleep(1)
+                            await event.click(text="Regular")  # Use Regular Poké Ball
+                            logger.info(f'Threw a Regular Poké Ball at {pok_name}')
+
+                            # ✅ Wait for Bot Response
+                            response = await asyncio.wait_for(self.wait_for_event(), timeout=5)
+                            if response:
+                                logger.info(f"Bot response: {response.raw_text}")
+
+                                if "caught" in response.raw_text:
                                     logger.info(f"{pok_name} was caught successfully!")
                                     break  # Stop retrying
-                                elif response and "fled" in response.raw_text:
+                                elif "fled" in response.raw_text:
                                     logger.warning(f"{pok_name} fled from battle.")
                                     break  # Stop retrying
                                 else:
                                     logger.warning(f"Failed to catch {pok_name}, retrying...")
                                     continue  # Try again
 
-                            except MessageIdInvalidError:
-                                logger.warning(f'Failed to throw a Regular Poké Ball for {pok_name}')
-                            except Exception as e:
-                                logger.exception(f'Unexpected error trying to catch {pok_name}: {e}')
-                                break  # Stop retrying if unexpected issue occurs
-
-                    #  High HP Pokémon: Attack or take another action
-                    elif wild_health_percentage > 60:
-                        await asyncio.sleep(1)
-                        try:
-                            await event.click(0, 0)  # Attack or other action
                         except MessageIdInvalidError:
-                            logger.exception(f"Failed to click the button for {pok_name} with high health")
+                            logger.warning(f'Failed to throw a Poké Ball for {pok_name}, retrying...')
+                        except Exception as e:
+                            logger.exception(f'Unexpected error trying to catch {pok_name}: {e}')
+                            break  # Stop retrying if an unexpected issue occurs
 
-                    #  Medium HP Pokémon: Try catching
-                    elif wild_health_percentage <= 60:
+                # ✅ High HP Pokémon: Attack or Take Action
+                elif wild_health_percentage > 60:
+                    await asyncio.sleep(1)
+                    try:
+                        await event.click(0, 0)  # Attack or other action
+                        logger.info(f"Attacked {pok_name} (HP > 60%)")
+                    except MessageIdInvalidError:
+                        logger.exception(f"Failed to attack {pok_name} due to outdated message.")
+    
+                # ✅ Medium HP Pokémon: Try Catching with Different Balls
+                elif wild_health_percentage <= 60:
+                    await asyncio.sleep(1)
+                    try:
+                        await event.click(text="Poke Balls")
                         await asyncio.sleep(1)
-                        try:
-                            await event.click(text="Poke Balls")
-                            if pok_name in constants.REGULAR_BALL:
-                                await asyncio.sleep(1)
-                                await event.click(text="Regular")
-                            elif pok_name in constants.REPEAT_BALL:
-                                await asyncio.sleep(1)
-                                await event.click(text="Repeat")
-                        except MessageIdInvalidError:
-                            logger.exception(f"Failed to click Poke Balls for {pok_name} with low health")
 
-                    logger.info(f"{pok_name} health percentage: {wild_health_percentage}%")
-                else:
-                    logger.info(f"Wild Pokémon {pok_name} HP not found in the battle description.")
+                        if pok_name in constants.REGULAR_BALL:
+                            await event.click(text="Regular")
+                            logger.info(f"Used Regular Ball for {pok_name}")
+                        elif pok_name in constants.REPEAT_BALL:
+                            await event.click(text="Repeat")
+                            logger.info(f"Used Repeat Ball for {pok_name}")
+
+                    except MessageIdInvalidError:
+                        logger.exception(f"Failed to click Poke Balls for {pok_name} (low health).")
+
+                logger.info(f"{pok_name} health percentage: {wild_health_percentage}%")
             else:
-                logger.info("Wild Pokémon name not found in the battle description.")
+                logger.info("Wild Pokémon name or HP not found in the battle description.")
 
   
     async def handle_after_battle(self, event: events.MessageEdited.Event) -> None:
