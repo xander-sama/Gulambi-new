@@ -453,9 +453,9 @@ class PokemonHuntingEngine:
                 await asyncio.sleep(2)  # Wait for UI update
 
                     # Debug: Log available buttons
-                    if event.reply_markup:
-                        available_buttons = [button.text for row in event.reply_markup.rows for button in row.buttons]
-                        logger.info(f"Available Buttons after clicking 'Poke Balls': {available_buttons}")
+        if event.reply_markup:
+                   available_buttons = [button.text for row in event.reply_markup.rows for button in row.buttons]
+                   logger.info(f"Available Buttons after clicking 'Poke Balls': {available_buttons}")
 
                 # Try clicking one of the available Poké Balls
                 for ball in ["Regular", "Repeat"]:
