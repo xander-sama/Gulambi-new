@@ -5,18 +5,20 @@ from telethon.tl.types import ChatBannedRights, ChatAdminRights, ChannelParticip
 muted_users = set()  # Store muted users in memory
 
 class AdminManager:
-    """Handles admin commands like ban, unban, mute, unmute, promote, demote, and kick."""
+    """Handles admin commands like ban, unban, mute, unmute, promote, and demote."""
 
     def __init__(self, client):
         self.client = client
 
     async def is_admin(self, chat, user_id):
-        """Returns True if the user is an admin, False otherwise."""
+        """Returns the participant object if the user is an admin, otherwise None."""
         try:
             participant = await self.client(GetParticipantRequest(chat, user_id))
-            return hasattr(participant.participant, 'admin_rights')  # Check if user has admin rights
+            if hasattr(participant.participant, 'admin_rights'):
+                return participant.participant
+            return None
         except Exception:
-            return False  # User is not an admin or not a participant
+            return None
 
     async def has_delete_rights(self, chat, user_id):
         """Checks if a user has the 'Delete Messages' admin right."""
@@ -33,7 +35,8 @@ class AdminManager:
             return await event.edit("You need to be an admin to use this command.")
 
         # Ensure the sender has "Delete Messages" permission
-        if not await self.has_delete_rights(chat, sender.id):
+        sender_admin = await self.is_admin(chat, sender.id)
+        if not sender_admin or not getattr(sender_admin.admin_rights, 'delete_messages', False):
             return await event.edit("You need 'Delete Messages' permission to mute admins!")
 
         # Get the target user
@@ -224,11 +227,12 @@ class AdminManager:
     def get_event_handlers(self):
         """Returns event handlers for admin commands."""
         return [
-            {"callback": self.mute_user, "event": events.NewMessage(pattern=r"\.mute$", outgoing=True)},
-            {"callback": self.unmute_user, "event": events.NewMessage(pattern=r"\.unmute$", outgoing=True)},
-            {"callback": self.ban_user, "event": events.NewMessage(pattern=r"\.ban$", outgoing=True)},
-            {"callback": self.unban_user, "event": events.NewMessage(pattern=r"\.unban$", outgoing=True)},
-            {"callback": self.kick_user, "event": events.NewMessage(pattern=r"\.kick$", outgoing=True)},
-            {"callback": self.promote_user, "event": events.NewMessage(pattern=r"\.promote$", outgoing=True)},
-            {"callback": self.demote_user, "event": events.NewMessage(pattern=r"\.demote$", outgoing=True)},
-        ]
+            {"callback": self.mute_user, "event": events.NewMessage(pattern=r"\.mute(?: (\d+))?", outgoing=True)},
+            {"callback": self.unmute_user, "event": events.NewMessage(pattern=r"\.unmute(?: (\d+))?", outgoing=True)},
+            {"callback": self.ban_user, "event": events.NewMessage(pattern=r"\.ban(?: (\d+))?", outgoing=True)},
+            {"callback": self.unban_user, "event": events.NewMessage(pattern=r"\.unban(?: (\d+))?", outgoing=True)},
+            {"callback": self.kick_user, "event": events.NewMessage(pattern=r"\.kick(?: (\d+))?", outgoing=True)},
+            {"callback": self.promote_user, "event": events.NewMessage(pattern=r"\.promote(?: (\d+))?", outgoing=True)},
+            {"callback": self.demote_user, "event": events.NewMessage(pattern=r"\.demote(?: (\d+))?", outgoing=True)},
+            {"callback": self.delete_muted_messages, "event": events.NewMessage()},
+            ]
