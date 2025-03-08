@@ -81,7 +81,10 @@ class AdminManager:
         if user not in muted_users:
             return await event.edit("This user is not muted!")
 
-        await self.client(EditBannedRequest(chat.id, user, ChatBannedRights()))
+        await self.client(EditBannedRequest(
+            chat.id, user,
+            ChatBannedRights(until_date=None)  # Unmute the user
+        ))
         muted_users.discard(user)  # Remove user from muted list
         await event.edit(f"Unmuted {user}!")
 
@@ -109,7 +112,10 @@ class AdminManager:
         else:
             return await event.edit("Reply to a user or provide a user ID/username.")
 
-        await self.client(EditBannedRequest(chat.id, user, ChatBannedRights(until_date=None, view_messages=True)))
+        await self.client(EditBannedRequest(
+            chat.id, user,
+            ChatBannedRights(until_date=None, view_messages=True)
+        ))
         await event.edit(f"Banned {user}!")
 
     async def unban_user(self, event):
@@ -131,7 +137,10 @@ class AdminManager:
         else:
             return await event.edit("Reply to a user or provide a user ID/username.")
 
-        await self.client(EditBannedRequest(chat.id, user, ChatBannedRights()))
+        await self.client(EditBannedRequest(
+            chat.id, user,
+            ChatBannedRights(until_date=None)
+        ))
         await event.edit(f"Unbanned {user}!")
 
     async def kick_user(self, event):
@@ -160,7 +169,7 @@ class AdminManager:
         ))
         await self.client(EditBannedRequest(
             chat.id, user,
-            ChatBannedRights()  # Unban the user immediately
+            ChatBannedRights(until_date=None)  # Unban the user immediately
         ))
 
         await event.edit(f"Kicked {user}!")
@@ -235,4 +244,4 @@ class AdminManager:
             {"callback": self.promote_user, "event": events.NewMessage(pattern=r"\.promote(?: (\d+))?", outgoing=True)},
             {"callback": self.demote_user, "event": events.NewMessage(pattern=r"\.demote(?: (\d+))?", outgoing=True)},
             {"callback": self.delete_muted_messages, "event": events.NewMessage()},
-            ]
+        ]
