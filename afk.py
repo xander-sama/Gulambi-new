@@ -24,7 +24,7 @@ class AFKManager:
 
         self._afk_status["is_afk"] = True
         self._afk_status["start_time"] = datetime.now()
-        await event.reply(f"I'm now AFK! Reason: {self._afk_status['reason']}")
+        await event.edit(f"I'm now AFK! Reason: {self._afk_status['reason']}")  # Use event.edit
 
     async def handle_incoming_message(self, event):
         """Handles incoming messages when AFK is enabled."""
@@ -39,11 +39,11 @@ class AFKManager:
                 f"{self._afk_status['reason']}\n"
                 f"I've been AFK for: {duration_str}"
             )
-            await event.reply(reply_message)
+            await event.reply(reply_message)  # Keep reply for incoming messages
 
     async def disable_afk(self, event):
         """Disables AFK when the user sends a message."""
         if self._afk_status["is_afk"]:
             self._afk_status["is_afk"] = False
             self._afk_status["start_time"] = None
-            await event.reply("I'm no longer AFK!")
+            await event.edit("I'm no longer AFK!")  # Use event.edit
