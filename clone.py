@@ -2,9 +2,10 @@ from telethon import events
 from telethon.tl.functions.photos import DeletePhotosRequest, UploadProfilePhotoRequest
 from telethon.tl.functions.account import UpdateProfileRequest
 from telethon.tl.functions.users import GetFullUserRequest
+from telethon.errors import StickersetInvalidError
 
-import constants
-
+import os
+from constants import TEMP_DOWNLOAD_PATH
 
 class CloneManager:
     """Handles cloning and reverting user profiles."""
@@ -25,10 +26,10 @@ class CloneManager:
         # Save original profile details
         my_profile = await self._client(GetFullUserRequest("me"))
         self.original_profile = {
-            "first_name": my_profile.first_name or "",
-            "last_name": my_profile.last_name or "",
-            "bio": my_profile.about or "",
-            "username": my_profile.username or "",
+            "first_name": my_profile.user.first_name or "",  # Access first_name from user attribute
+            "last_name": my_profile.user.last_name or "",    # Access last_name from user attribute
+            "bio": my_profile.about or "",                  # Access bio directly
+            "username": my_profile.user.username or "",     # Access username from user attribute
             "photos": await self._client.get_profile_photos("me")  # Save current profile pictures
         }
 
@@ -37,10 +38,10 @@ class CloneManager:
 
         # Update name, bio, and username
         await self._client(UpdateProfileRequest(
-            first_name=target_profile.first_name or "",
-            last_name=target_profile.last_name or "",
-            about=target_profile.about or "",
-            username=target_profile.username or ""
+            first_name=target_profile.user.first_name or "",  # Access first_name from user attribute
+            last_name=target_profile.user.last_name or "",    # Access last_name from user attribute
+            about=target_profile.about or "",                # Access bio directly
+            username=target_profile.user.username or ""      # Access username from user attribute
         ))
 
         # Upload latest profile picture if available
