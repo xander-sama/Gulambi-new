@@ -38,19 +38,6 @@ class AFKManager:
         await event.edit(f"I am now AFK: {self.afk_message}")
         logger.info(f"AFK enabled. Reason: {self.afk_reason}")
 
-    async def unafk_command(self, event) -> None:
-        """Handle the .unafk command."""
-        if not self.afk_status:
-            await event.edit("I am not AFK!")
-            return
-
-        # Disable AFK
-        self.afk_status = False
-        self.afk_start_time = None
-        self.afk_reason = None
-        await event.edit("I am no longer AFK!")
-        logger.info("AFK disabled.")
-
     async def handle_afk_messages(self, event) -> None:
         """Handle incoming messages when AFK is enabled."""
         if not self.afk_status:
@@ -87,10 +74,19 @@ class AFKManager:
         self.last_replied[event.sender_id] = current_time  # Update last reply time
         logger.info(f"Sent AFK reply to {event.sender_id}")
 
+    async def disable_afk_on_message(self, event) -> None:
+        """Automatically disable AFK when the user sends any message."""
+        if self.afk_status:
+            self.afk_status = False
+            self.afk_start_time = None
+            self.afk_reason = None
+            logger.info("AFK disabled.")
+            await event.respond("I am no longer AFK!")
+
     def get_event_handlers(self) -> list:
         """Returns a list of AFK-related event handlers."""
         return [
             {'callback': self.afk_command, 'event': events.NewMessage(pattern=constants.AFK_COMMAND_REGEX, outgoing=True)},
-            {'callback': self.unafk_command, 'event': events.NewMessage(pattern=constants.UNAFK_COMMAND_REGEX, outgoing=True)},
-            {'callback': self.handle_afk_messages, 'event': events.NewMessage(incoming=True)}
+            {'callback': self.handle_afk_messages, 'event': events.NewMessage(incoming=True)},
+            {'callback': self.disable_afk_on_message, 'event': events.NewMessage(outgoing=True)}  # Disable AFK on message
         ]
