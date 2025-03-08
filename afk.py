@@ -1,72 +1,89 @@
-from datetime import datetime
+import time
+from typing import Optional, Dict
+
+from loguru import logger
 from telethon import events
 
+import constants
+
 class AFKManager:
+    """Manages the AFK feature for the userbot."""
+
     def __init__(self, client):
-        self._client = client
-        self._afk_status = {
-            "is_afk": False,
-            "start_time": None,
-            "reason": "I'm AFK right now. I'll get back to you later!"
-        }
-        self._last_message_id = None  # Track the last message ID to ignore edits
-        self._bot_user_id = None  # Store the bot's user ID
+        self.client = client
+        self.afk_status = False
+        self.afk_message = "I'm AFK."
+        self.afk_start_time: Optional[float] = None
+        self.afk_reason: Optional[str] = None
+        self.last_replied: Dict[int, float] = {}  # Track last reply time to each user
 
-    async def _get_bot_user_id(self):
-        """Get the bot's user ID."""
-        if not self._bot_user_id:
-            me = await self._client.get_me()
-            self._bot_user_id = me.id
-        return self._bot_user_id
+    async def afk_command(self, event) -> None:
+        """Handle the .afk command."""
+        if self.afk_status:
+            await event.edit("I am already AFK!")
+            return
 
-    def start(self):
-        """Registers AFK event handlers."""
-        self._client.add_event_handler(self.handle_afk_command, events.NewMessage(pattern=r"\.afk", outgoing=True))
-        self._client.add_event_handler(self.handle_incoming_message, events.NewMessage(incoming=True))
-        self._client.add_event_handler(self.disable_afk, events.NewMessage(outgoing=True))
+        # Get custom reason if provided
+        custom_message = event.pattern_match.group(1)
+        self.afk_reason = custom_message if custom_message else "No reason provided"
 
-    async def handle_afk_command(self, event):
-        """Handles the `.afk` command."""
-        reason = event.raw_text.split(".afk", 1)
-        if len(reason) > 1 and reason[1].strip():
-            self._afk_status["reason"] = reason[1].strip()
+        # Prevent editing if message content is the same
+        new_afk_message = f"I'm now AFK! Reason: {self.afk_reason}"
+        if event.text == new_afk_message:
+            return
 
-        self._afk_status["is_afk"] = True
-        self._afk_status["start_time"] = datetime.now()
-        self._last_message_id = event.id  # Store the message ID of the .afk command
-        await event.edit(f"I'm now AFK! Reason: {self._afk_status['reason']}")  # Use event.edit
+        # Enable AFK
+        self.afk_status = True
+        self.afk_start_time = time.time()
+        await event.edit(new_afk_message)
+        logger.info(f"AFK enabled. Reason: {self.afk_reason}")
 
-    async def handle_incoming_message(self, event):
-        """Handles incoming messages when AFK is enabled."""
-        if self._afk_status["is_afk"] and event.is_private:
-            now = datetime.now()
-            afk_duration = now - self._afk_status["start_time"]
-            hours, remainder = divmod(afk_duration.seconds, 3600)
-            minutes, seconds = divmod(remainder, 60)
-            duration_str = f"{hours}h {minutes}m {seconds}s"
+    async def handle_afk_messages(self, event) -> None:
+        """Handle incoming messages when AFK is enabled."""
+        if not self.afk_status:
+            return
 
-            reply_message = (
-                f"{self._afk_status['reason']}\n"
-                f"I've been AFK for: {duration_str}"
-            )
-            await event.reply(reply_message)  # Keep reply for incoming messages
+        # Ignore messages from yourself
+        if event.sender_id == (await self.client.get_me()).id:
+            return
 
-    async def disable_afk(self, event):
-        """Disables AFK when the user sends a new message (not an edit)."""
-        if self._afk_status["is_afk"]:
-            # Ignore if the message is an edit of the .afk command
-            if event.id == self._last_message_id:
-                return
+        # Check if the message is in a group and the bot is not mentioned
+        if event.is_group and not event.mentioned:
+            return
 
-            # Ignore if the message is sent by the bot itself
-            bot_user_id = await self._get_bot_user_id()
-            if event.sender_id == bot_user_id:
-                return
+        # Prevent multiple AFK replies to the same user in a short period
+        current_time = time.time()
+        last_reply_time = self.last_replied.get(event.sender_id, 0)
+        if current_time - last_reply_time < 60:  # 60 seconds cooldown
+            return
 
-            # Ignore if the message contains the AFK reason (bot's reply)
-            if self._afk_status["reason"] in event.raw_text:
-                return
+        # Calculate AFK duration
+        afk_duration = int(current_time - self.afk_start_time)
+        hours, remainder = divmod(afk_duration, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        duration_text = f"{hours}h {minutes}m {seconds}s"
 
-            self._afk_status["is_afk"] = False
-            self._afk_status["start_time"] = None
-            await event.edit("I'm no longer AFK!")  # Use event.edit
+        # Prepare AFK reply
+        reply_message = f"I'm AFK.\nReason: {self.afk_reason}\nTotal time since AFK: {duration_text}"
+
+        # Send AFK reply
+        await event.reply(reply_message)
+        self.last_replied[event.sender_id] = current_time  # Update last reply time
+        logger.info(f"Sent AFK reply to {event.sender_id}")
+
+    async def disable_afk_on_message(self, event) -> None:
+        """Automatically disable AFK when the user sends any message."""
+        if self.afk_status:
+            self.afk_status = False
+            self.afk_start_time = None
+            self.afk_reason = None
+            logger.info("AFK disabled.")
+            await event.respond("I am no longer AFK!")
+
+    def get_event_handlers(self) -> list:
+        """Returns a list of AFK-related event handlers."""
+        return [
+            {'callback': self.afk_command, 'event': events.NewMessage(pattern=constants.AFK_COMMAND_REGEX, outgoing=True)},
+            {'callback': self.handle_afk_messages, 'event': events.NewMessage(incoming=True)},
+            {'callback': self.disable_afk_on_message, 'event': events.NewMessage(outgoing=True)}  # Disable AFK on message
+        ]
