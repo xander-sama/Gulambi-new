@@ -50,7 +50,7 @@ POKEMON_TEAM = [
 
 # **Auto-Release Pokémon List**
 RELEASE = [
-        "Arrokuda", "Abra"          
+        "Arrokuda"          
 ]  
 
 
