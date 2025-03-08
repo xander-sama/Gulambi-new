@@ -8,21 +8,28 @@ class PokemonReleaseManager:
         self.client = client
         self.release_task = None  
         self.running = False  
+        self.current_chat_id = None  
+        self.pokemon_to_release = []  
 
     async def release_pokemon(self):
-        """Releases Pokémon listed in constants.RELEASE"""
+        """Releases Pokémon in the chat where .release on was used"""
         while self.running:
             try:
-                for pokemon in constants.RELEASE:
-                    logger.info(f"Releasing {pokemon}...")
-                    await self.client.send_message(constants.TARGET_BOT, f"/release {pokemon}")
+                if not self.current_chat_id:
+                    logger.warning("No active chat ID for release. Stopping...")
+                    self.running = False
+                    return  
+
+                for pokemon in self.pokemon_to_release:  
+                    logger.info(f"Releasing {pokemon} in chat {self.current_chat_id}...")
+                    await self.client.send_message(self.current_chat_id, f"/release {pokemon}")
 
                     await asyncio.sleep(2)
-                    async for message in self.client.iter_messages(constants.TARGET_BOT, limit=1):
+                    async for message in self.client.iter_messages(self.current_chat_id, limit=1):
                         if message.buttons:
                             await message.click(0, 1)  
                             await asyncio.sleep(4)
-                            async for updated_message in self.client.iter_messages(constants.TARGET_BOT, limit=1):
+                            async for updated_message in self.client.iter_messages(self.current_chat_id, limit=1):
                                 if updated_message.buttons:
                                     for i, row in enumerate(updated_message.buttons):
                                         for j, button in enumerate(row):
@@ -37,19 +44,32 @@ class PokemonReleaseManager:
                 await asyncio.sleep(5)  
 
     async def start_releasing(self, event):
+        """Starts auto-releasing Pokémon. Users can specify Pokémon to release."""
+        args = event.raw_text.split()[1:]  
+
+        if not args:
+            await event.respond(" Please provide Pokémon names to release.\n\n**Example:** `.release on Pikachu Bulbasaur Charmander`")
+            return
+
+        self.pokemon_to_release = args  
+
         if not self.running:
             self.running = True
+            self.current_chat_id = event.chat_id  
             self.release_task = asyncio.create_task(self.release_pokemon())
-            await event.reply(" Pokémon auto-release started!")
+            await event.respond(f" Auto-releasing: {', '.join(self.pokemon_to_release)} in this chat!")  
         else:
-            await event.reply(" Release is already running!")
+            await event.respond(" Release is already running!")
 
     async def stop_releasing(self, event):
+        """Stops the release process"""
         if self.running:
             self.running = False
             if self.release_task:
                 self.release_task.cancel()
                 self.release_task = None
-            await event.reply(" Pokémon auto-release stopped!")
+            self.current_chat_id = None  
+            self.pokemon_to_release = []  
+            await event.respond("Pokémon auto-release stopped!")  
         else:
-            await event.reply(" No active release process.")
+            await event.respond("No active release process.")
