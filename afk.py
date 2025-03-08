@@ -9,6 +9,7 @@ class AFKManager:
             "start_time": None,
             "reason": "I'm AFK right now. I'll get back to you later!"
         }
+        self._ignore_first_message = False  # Flag to ignore the first outgoing message
 
     def start(self):
         """Registers AFK event handlers."""
@@ -24,6 +25,7 @@ class AFKManager:
 
         self._afk_status["is_afk"] = True
         self._afk_status["start_time"] = datetime.now()
+        self._ignore_first_message = True  # Set flag to ignore the first outgoing message
         await event.edit(f"I'm now AFK! Reason: {self._afk_status['reason']}")  # Use event.edit
 
     async def handle_incoming_message(self, event):
@@ -44,6 +46,11 @@ class AFKManager:
     async def disable_afk(self, event):
         """Disables AFK when the user sends a message."""
         if self._afk_status["is_afk"]:
+            if self._ignore_first_message:
+                # Ignore the first outgoing message (the .afk command itself)
+                self._ignore_first_message = False
+                return
+
             self._afk_status["is_afk"] = False
             self._afk_status["start_time"] = None
             await event.edit("I'm no longer AFK!")  # Use event.edit
