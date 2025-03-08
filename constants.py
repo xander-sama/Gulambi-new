@@ -48,10 +48,7 @@ POKEMON_TEAM = [
 ]   # Add your preferred Pokémon for hunting here
 
 
-# **Auto-Release Pokémon List**
-RELEASE = [
-        "Arrokuda"          
-]  
+TEMP_DOWNLOAD_PATH = "./downloads"
 
 
 # Owner and Bot Information
