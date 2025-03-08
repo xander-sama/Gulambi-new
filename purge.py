@@ -1,3 +1,4 @@
+import asyncio
 from telethon import events
 
 class PurgeManager:
@@ -24,4 +25,5 @@ class PurgeManager:
         if to_delete:
             await self._client.delete_messages(chat, to_delete)
             confirmation = await event.reply(f"Deleted {len(to_delete)} messages!")
-            await confirmation.delete(delay=3)
+            await asyncio.sleep(3)  # Wait for 3 seconds
+            await confirmation.delete()  # Delete the confirmation message

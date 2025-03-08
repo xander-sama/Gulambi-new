@@ -5,23 +5,23 @@ from telethon.tl.types import ChatBannedRights, ChatAdminRights, ChannelParticip
 muted_users = set()  # Store muted users in memory
 
 class AdminManager:
-    """Handles admin commands like ban, unban, mute, unmute, promote, and demote."""
+    """Handles admin commands like ban, unban, mute, unmute, promote, demote, and kick."""
 
     def __init__(self, client):
         self.client = client
 
     async def is_admin(self, chat, user_id):
-        """Returns the participant's admin rights if they are an admin."""
+        """Returns True if the user is an admin, False otherwise."""
         try:
             participant = await self.client(GetParticipantRequest(chat, user_id))
-            return participant.participant  # Returns admin info (or None if not an admin)
+            return hasattr(participant.participant, 'admin_rights')  # Check if user has admin rights
         except Exception:
-            return None  
+            return False  # User is not an admin or not a participant
 
     async def has_delete_rights(self, chat, user_id):
         """Checks if a user has the 'Delete Messages' admin right."""
         admin = await self.is_admin(chat, user_id)
-        return bool(admin and getattr(admin.admin_rights, 'delete_messages', False))
+        return admin and getattr(admin.admin_rights, 'delete_messages', False)
 
     async def mute_user(self, event):
         """Mutes a user, including admins if the sender has 'Delete Messages' permission."""
@@ -74,6 +74,9 @@ class AdminManager:
                 return await event.edit(f"Invalid user ID/username: {e}")
         else:
             return await event.edit("Reply to a user or provide a user ID/username.")
+
+        if user not in muted_users:
+            return await event.edit("This user is not muted!")
 
         await self.client(EditBannedRequest(chat.id, user, ChatBannedRights()))
         muted_users.discard(user)  # Remove user from muted list
@@ -128,6 +131,37 @@ class AdminManager:
         await self.client(EditBannedRequest(chat.id, user, ChatBannedRights()))
         await event.edit(f"Unbanned {user}!")
 
+    async def kick_user(self, event):
+        """Kicks a user from the chat."""
+        args = event.pattern_match.group(1)
+        chat = await event.get_chat()
+
+        if not await self.is_admin(chat, event.sender_id):
+            return await event.edit("You need to be an admin to use this command.")
+
+        if event.reply_to_msg_id:
+            reply = await event.get_reply_message()
+            user = reply.sender_id
+        elif args:
+            try:
+                user = int(args) if args.isdigit() else await self.client.get_entity(args)
+            except Exception as e:
+                return await event.edit(f"Invalid user ID/username: {e}")
+        else:
+            return await event.edit("Reply to a user or provide a user ID/username.")
+
+        # Kick the user (ban and then unban to simulate a kick)
+        await self.client(EditBannedRequest(
+            chat.id, user,
+            ChatBannedRights(until_date=None, view_messages=True)  # Ban the user
+        ))
+        await self.client(EditBannedRequest(
+            chat.id, user,
+            ChatBannedRights()  # Unban the user immediately
+        ))
+
+        await event.edit(f"Kicked {user}!")
+
     async def promote_user(self, event):
         """Promotes a user to admin."""
         args = event.pattern_match.group(1)
@@ -147,7 +181,17 @@ class AdminManager:
         else:
             return await event.edit("Reply to a user or provide a user ID/username.")
 
-        rights = ChatAdminRights(post_messages=True, delete_messages=True, ban_users=True, invite_users=True, change_info=True, pin_messages=True)
+        if await self.is_admin(chat, user):
+            return await event.edit("This user is already an admin!")
+
+        rights = ChatAdminRights(
+            post_messages=True,
+            delete_messages=True,
+            ban_users=True,
+            invite_users=True,
+            change_info=True,
+            pin_messages=True
+        )
         await self.client(EditAdminRequest(chat.id, user, rights, rank="Admin"))
         await event.edit(f"Promoted {user} to Admin!")
 
@@ -170,6 +214,21 @@ class AdminManager:
         else:
             return await event.edit("Reply to a user or provide a user ID/username.")
 
+        if not await self.is_admin(chat, user):
+            return await event.edit("This user is not an admin!")
+
         rights = ChatAdminRights()
         await self.client(EditAdminRequest(chat.id, user, rights, rank=""))
         await event.edit(f"Demoted {user} to a normal user!")
+
+    def get_event_handlers(self):
+        """Returns event handlers for admin commands."""
+        return [
+            {"callback": self.mute_user, "event": events.NewMessage(pattern=r"\.mute$", outgoing=True)},
+            {"callback": self.unmute_user, "event": events.NewMessage(pattern=r"\.unmute$", outgoing=True)},
+            {"callback": self.ban_user, "event": events.NewMessage(pattern=r"\.ban$", outgoing=True)},
+            {"callback": self.unban_user, "event": events.NewMessage(pattern=r"\.unban$", outgoing=True)},
+            {"callback": self.kick_user, "event": events.NewMessage(pattern=r"\.kick$", outgoing=True)},
+            {"callback": self.promote_user, "event": events.NewMessage(pattern=r"\.promote$", outgoing=True)},
+            {"callback": self.demote_user, "event": events.NewMessage(pattern=r"\.demote$", outgoing=True)},
+        ]

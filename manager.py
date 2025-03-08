@@ -14,8 +14,8 @@ from release import PokemonReleaseManager
 from spam import SpamManager
 from purge import PurgeManager
 from clone import CloneManager
-from admin import AdminManager  # Import AdminManager
-from kang import KangManager  # Import KangManager
+from admin import AdminManager
+from kang import KangManager
 
 HELP_MESSAGE = """**Help Menu**  
 
@@ -37,6 +37,7 @@ HELP_MESSAGE = """**Help Menu**
 • `.unmute <user_id/reply>` - Unmute a user  
 • `.promote <user_id/reply>` - Make a user admin  
 • `.demote <user_id/reply>` - Remove admin rights  
+• `.kick <user_id/reply>` - Kick a user  
 
 **Other Commands:**  
 • `.afk (message)` - Set AFK status  
@@ -65,7 +66,7 @@ class Manager:
         '_purge_manager',
         '_clone_manager',
         '_admin_manager',
-        '_kang_manager'  # Added KangManager
+        '_kang_manager'
     )
 
     def __init__(self, client) -> None:
@@ -80,7 +81,7 @@ class Manager:
         self._purge_manager = PurgeManager(client)
         self._clone_manager = CloneManager(client)
         self._admin_manager = AdminManager(client)
-        self._kang_manager = KangManager(client)  # Initialize KangManager
+        self._kang_manager = KangManager(client)
 
     def start(self) -> None:
         """Starts the Userbot's automations."""
@@ -92,13 +93,22 @@ class Manager:
 
         # Add AFK event handlers
         for handler in self._afk_manager.get_event_handlers():
-            self._client.add_event_handler(handler['callback'], handler['event'])
+            self._client.add_event_handler(self._wrap_handler(handler['callback']), handler['event'])
             logger.debug(f'[{self.__class__.__name__}] Added AFK event handler: `{handler["callback"].__name__}`')
 
         # Register event handlers
         for handler in self.event_handlers:
-            self._client.add_event_handler(handler['callback'], handler['event'])
+            self._client.add_event_handler(self._wrap_handler(handler['callback']), handler['event'])
             logger.debug(f'[{self.__class__.__name__}] Added event handler: `{handler["callback"].__name__}`')
+
+    def _wrap_handler(self, callback):
+        """Wraps an event handler to catch and log exceptions."""
+        async def wrapped_handler(event):
+            try:
+                await callback(event)
+            except Exception as e:
+                logger.error(f"Error in {callback.__name__}: {e}")
+        return wrapped_handler
 
     async def ping_command(self, event) -> None:
         """Handles the `.ping` command."""
@@ -135,5 +145,7 @@ class Manager:
             {'callback': self._admin_manager.unmute_user, 'event': events.NewMessage(pattern=r"\.unmute(?: (\d+))?", outgoing=True)},
             {'callback': self._admin_manager.promote_user, 'event': events.NewMessage(pattern=r"\.promote(?: (\d+))?", outgoing=True)},
             {'callback': self._admin_manager.demote_user, 'event': events.NewMessage(pattern=r"\.demote(?: (\d+))?", outgoing=True)},
-            {'callback': self._kang_manager.kang, 'event': events.NewMessage(pattern=r"\.kang(?: .+)?", outgoing=True)},  # Added Kang Command
+            {'callback': self._admin_manager.kick_user, 'event': events.NewMessage(pattern=r"\.kick(?: (\d+))?", outgoing=True)},
+            {'callback': self._kang_manager.kang, 'event': events.NewMessage(pattern=r"\.kang(?: .+)?", outgoing=True)},
+            {'callback': self._admin_manager.delete_muted_messages, 'event': events.NewMessage()},  # Auto-delete muted users' messages
         ]

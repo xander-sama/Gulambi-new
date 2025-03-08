@@ -25,10 +25,10 @@ class CloneManager:
         # Save original profile details
         my_profile = await self._client(GetFullUserRequest("me"))
         self.original_profile = {
-            "first_name": my_profile.user.first_name,
-            "last_name": my_profile.user.last_name,
-            "bio": my_profile.about,
-            "username": my_profile.user.username,
+            "first_name": my_profile.first_name or "",
+            "last_name": my_profile.last_name or "",
+            "bio": my_profile.about or "",
+            "username": my_profile.username or "",
             "photos": await self._client.get_profile_photos("me")  # Save current profile pictures
         }
 
@@ -37,10 +37,10 @@ class CloneManager:
 
         # Update name, bio, and username
         await self._client(UpdateProfileRequest(
-            first_name=target_profile.user.first_name or "",
-            last_name=target_profile.user.last_name or "",
+            first_name=target_profile.first_name or "",
+            last_name=target_profile.last_name or "",
             about=target_profile.about or "",
-            username=target_profile.user.username or ""
+            username=target_profile.username or ""
         ))
 
         # Upload latest profile picture if available
