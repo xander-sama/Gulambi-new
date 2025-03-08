@@ -10,7 +10,7 @@ from guesser import PokemonIdentificationEngine
 from hunter import PokemonHuntingEngine
 from afk import AFKManager
 from alive import AliveHandler
-from release import PokemonReleaseManager  # ✅ Import Release Manager
+from release import PokemonReleaseManager  
 
 HELP_MESSAGE = """**Help**
 
@@ -35,7 +35,7 @@ class Manager:
         '_evaluator',
         '_afk_manager',
         '_alive_handler',
-        '_release_manager'  # ✅ Added release manager
+        '_release_manager'  
     )
 
     def __init__(self, client) -> None:
@@ -43,9 +43,9 @@ class Manager:
         self._guesser = PokemonIdentificationEngine(client)
         self._hunter = PokemonHuntingEngine(client)
         self._evaluator = ExpressionEvaluator(client)
-        self._afk_manager = AFKManager(client)
+        self._afk_manager = AFKManager(client)  
         self._alive_handler = AliveHandler(client)
-        self._release_manager = PokemonReleaseManager(client)  # ✅ Initialize release manager
+        self._release_manager = PokemonReleaseManager(client)  
 
     def start(self) -> None:
         """Starts the Userbot's automations."""
@@ -54,6 +54,7 @@ class Manager:
         self._hunter.start()
         self._evaluator.start()
         self._alive_handler.register()
+        self._afk_manager.start()  
 
         # Register event handlers
         for handler in self.event_handlers:
@@ -118,6 +119,10 @@ class Manager:
         formatted_list = ", ".join(sorted(pokemon_list))  
         await event.edit(f"**{category.capitalize()} Ball Pokémon:**\n{formatted_list}")
 
+    async def afk_command(self, event) -> None:
+        """Handles the `.afk` command."""
+        await self._afk_manager.handle_afk_command(event)
+
     @property
     def event_handlers(self) -> List[Dict[str, Callable | events.NewMessage]]:
         """Returns a list of event handlers, including release commands."""
@@ -127,6 +132,7 @@ class Manager:
             {'callback': self.handle_guesser_automation_control_request, 'event': events.NewMessage(pattern=constants.GUESSER_COMMAND_REGEX, outgoing=True)},
             {'callback': self.handle_hunter_automation_control_request, 'event': events.NewMessage(pattern=constants.HUNTER_COMMAND_REGEX, outgoing=True)},
             {'callback': self.list_pokemon, 'event': events.NewMessage(pattern=constants.LIST_COMMAND_REGEX, outgoing=True)},
-            {'callback': self._release_manager.start_releasing, 'event': events.NewMessage(pattern=r"\.release on", outgoing=True)},  # ✅ Start releasing
-            {'callback': self._release_manager.stop_releasing, 'event': events.NewMessage(pattern=r"\.release off", outgoing=True)}  # ✅ Stop releasing
+            {'callback': self.afk_command, 'event': events.NewMessage(pattern=constants.AFK_COMMAND_REGEX, outgoing=True)},  
+            {'callback': self._release_manager.start_releasing, 'event': events.NewMessage(pattern=r"\.release on", outgoing=True)},  
+            {'callback': self._release_manager.stop_releasing, 'event': events.NewMessage(pattern=r"\.release off", outgoing=True)}  
         ]
