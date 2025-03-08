@@ -61,7 +61,7 @@ BOT_VERSION = "1.0"
 # Commands
 PING_COMMAND_REGEX = r'^\.ping$'
 ALIVE_COMMAND_REGEX = r'^\.alive$'
-HELP_COMMAND_REGEX = r'^\.help$'
+HELP_COMMAND_REGEX = r'^\.help(?: (.*))?$'
 EVAL_COMMAND_REGEX = r'^\.eval (.+)'
 GUESSER_COMMAND_REGEX = r'^\.guess (on|off|stats)$'
 HUNTER_COMMAND_REGEX = r'^\.hunt (on|off|stats)$'
