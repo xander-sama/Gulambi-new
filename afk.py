@@ -63,6 +63,10 @@ class AFKManager:
             if event.sender_id == bot_user_id:
                 return
 
+            # Ignore if the message contains the AFK reason (bot's reply)
+            if self._afk_status["reason"] in event.raw_text:
+                return
+
             self._afk_status["is_afk"] = False
             self._afk_status["start_time"] = None
             await event.edit("I'm no longer AFK!")  # Use event.edit
