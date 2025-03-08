@@ -123,7 +123,7 @@ class Manager:
 
     @property
     def event_handlers(self) -> List[Dict[str, Callable | events.NewMessage]]:
-        """Returns a list of event handlers, including admin and kang commands."""
+        """Returns a list of event handlers, including admin, kang, and Pokémon commands."""
         return [
             {'callback': self.ping_command, 'event': events.NewMessage(pattern=constants.PING_COMMAND_REGEX, outgoing=True)},
             {'callback': self.help_command, 'event': events.NewMessage(pattern=constants.HELP_COMMAND_REGEX, outgoing=True)},
@@ -133,6 +133,8 @@ class Manager:
             {'callback': self._release_manager.add_pokemon, 'event': events.NewMessage(pattern=r"\.release add (.+)", outgoing=True)},
             {'callback': self._release_manager.remove_pokemon, 'event': events.NewMessage(pattern=r"\.release remove (.+)", outgoing=True)},
             {'callback': self._release_manager.list_pokemon, 'event': events.NewMessage(pattern=r"\.release list", outgoing=True)},
+            {'callback': self._guesser.toggle_guessing, 'event': events.NewMessage(pattern=r"\.guess (on|off|stats)$", outgoing=True)},
+            {'callback': self._hunter.toggle_hunting, 'event': events.NewMessage(pattern=r"\.hunt (on|off|stats)$", outgoing=True)},
             {'callback': self._spam_manager.spam, 'event': events.NewMessage(pattern=r"\.spam (.+) (\d+)", outgoing=True)},
             {'callback': self._spam_manager.delay_spam, 'event': events.NewMessage(pattern=r"\.delayspam (.+) (\d+) (\d+)", outgoing=True)},
             {'callback': self._spam_manager.stop_spam, 'event': events.NewMessage(pattern=r"\.stopspam$", outgoing=True)},
