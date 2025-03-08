@@ -10,26 +10,7 @@ from guesser import PokemonIdentificationEngine
 from hunter import PokemonHuntingEngine
 from afk import AFKManager
 from alive import AliveHandler
-
-HELP_MESSAGE = """**Help**
-
-• `.ping` - Pong
-• `.alive` - Bot status
-• `.help` - Help menu
-• `.guess` (on/off/stats) - any guesses?
-• `.hunt` (on/off/stats) - hunting for poki
-• `.list <category>` - List Pokémon by category
-• `.afk` (message) - Set AFK status
-• `.unafk` - Disable AFK status
-
-**Available Categories for `.list`**
-- `regular`
-- `repeat`
-- `ultra`
-- `great`
-- `nest`
-- `safari`
-"""
+from release import PokemonReleaseManager  
 
 class Manager:
     """Manages automation for the Userbot."""
@@ -40,7 +21,8 @@ class Manager:
         '_hunter',
         '_evaluator',
         '_afk_manager',
-        '_alive_handler'
+        '_alive_handler',
+        '_release_manager'  
     )
 
     def __init__(self, client) -> None:
@@ -50,6 +32,7 @@ class Manager:
         self._evaluator = ExpressionEvaluator(client)
         self._afk_manager = AFKManager(client)
         self._alive_handler = AliveHandler(client)
+        self._release_manager = PokemonReleaseManager(client)  
 
     def start(self) -> None:
         """Starts the Userbot's automations."""
@@ -77,8 +60,37 @@ class Manager:
         await event.edit(f'Pong!!\n{ping_ms:.2f}ms')
 
     async def help_command(self, event) -> None:
-        """Handles the `.help` command."""
-        await event.edit(HELP_MESSAGE)
+        """Handles the `.help` command dynamically."""
+        args = event.pattern_match.group(1)
+
+        HELP_CATEGORIES = {
+            "pokemon": "**Pokemon Commands**\n- `list`\n- `hunt`\n- `guess`\n- `release`",
+            "afk": "**AFK Commands**\n- `afk`\n- `unafk`",
+        }
+
+        HELP_DETAILS = {
+            "list": "**List Command**\n- `.list <category>` → List Pokémon by category.\n\nAvailable categories:\n- `regular`\n- `repeat`\n- `ultra`\n- `great`\n- `nest`\n- `safari`",
+            "hunt": "**Hunt Command**\n- `.hunt on` → Start auto-hunting Pokémon.\n- `.hunt off` → Stop auto-hunting.\n- `.hunt stats` → Show hunting stats.",
+            "guess": "**Guess Command**\n- `.guess on` → Start Pokémon guessing game.\n- `.guess off` → Stop guessing game.\n- `.guess stats` → Show stats.",
+            "release": "**Release Command**\n- `.release on` → Start auto-releasing Pokémon.\n- `.release off` → Stop auto-releasing Pokémon.",
+            "afk": "**AFK Command**\n- `.afk <message>` → Set AFK with an optional message.\n- `.unafk` → Remove AFK status.",
+        }
+
+        if not args:
+            await event.edit("**Available Commands:**\n- `pokemon`\n- `afk`\n\nUse `.help <category>` for more details.")
+            return
+
+        category = args.lower()
+
+        if category in HELP_CATEGORIES:
+            await event.edit(HELP_CATEGORIES[category] + "\n\nUse `.help <command>` for more details.")
+            return
+
+        if category in HELP_DETAILS:
+            await event.edit(HELP_DETAILS[category])
+            return
+
+        await event.edit("Invalid command! Use `.help` to see available commands.")
 
     async def handle_guesser_automation_control_request(self, event) -> None:
         """Handles user requests to enable/disable guesser automation."""
@@ -129,11 +141,13 @@ class Manager:
 
     @property
     def event_handlers(self) -> List[Dict[str, Callable | events.NewMessage]]:
-        """Returns a list of event handlers."""
+        """Returns a list of event handlers, including release commands."""
         return [
             {'callback': self.ping_command, 'event': events.NewMessage(pattern=constants.PING_COMMAND_REGEX, outgoing=True)},
             {'callback': self.help_command, 'event': events.NewMessage(pattern=constants.HELP_COMMAND_REGEX, outgoing=True)},
             {'callback': self.handle_guesser_automation_control_request, 'event': events.NewMessage(pattern=constants.GUESSER_COMMAND_REGEX, outgoing=True)},
             {'callback': self.handle_hunter_automation_control_request, 'event': events.NewMessage(pattern=constants.HUNTER_COMMAND_REGEX, outgoing=True)},
-            {'callback': self.list_pokemon, 'event': events.NewMessage(pattern=constants.LIST_COMMAND_REGEX, outgoing=True)}
+            {'callback': self.list_pokemon, 'event': events.NewMessage(pattern=constants.LIST_COMMAND_REGEX, outgoing=True)},
+            {'callback': self._release_manager.start_releasing, 'event': events.NewMessage(pattern=r"\.release on", outgoing=True)},  
+            {'callback': self._release_manager.stop_releasing, 'event': events.NewMessage(pattern=r"\.release off", outgoing=True)}  
         ]

@@ -47,6 +47,13 @@ POKEMON_TEAM = [
     "Gardevoir", "Arceus", "Xerneas"
 ]   # Add your preferred Pokémon for hunting here
 
+
+# **Auto-Release Pokémon List**
+RELEASE = [
+        "Abra"          
+]  
+
+
 # Owner and Bot Information
 OWNER_NAME = "Enryu"
 BOT_VERSION = "1.0"
