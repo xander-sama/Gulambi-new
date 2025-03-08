@@ -1,70 +1,50 @@
 import asyncio
-from loguru import logger
 from telethon import events
 
 class SpamManager:
+    """Handles spam commands for the Userbot."""
+
     def __init__(self, client):
-        self.client = client
+        self._client = client
+        self._running_spams = {}  # Dictionary to store running spam tasks
 
     async def spam(self, event):
-        """Handles the `.spam` command with optional reply support."""
-        args = event.raw_text.split(maxsplit=2)
-        if len(args) < 3 or not args[2].isdigit():
-            await event.edit("**Usage:** `.spam <message> <count>`")
+        """Handles the `.spam <msg> <count>` command."""
+        args = event.pattern_match.group(1).rsplit(" ", 1)
+        if len(args) != 2 or not args[1].isdigit():
+            await event.reply("**Usage:** `.spam <message> <count>`")
             return
 
-        message = args[1]
-        count = int(args[2])
-        reply_to = event.reply_to_msg_id  # Get the replied message ID (if any)
-
-        await event.delete()
-
-        if reply_to:
-            try:
-                await self.client.get_messages(event.chat_id, ids=reply_to)  # Check if the message exists
-            except:
-                await event.respond("❌ **The replied message was deleted. Cancelling spam.**")
-                return  
+        message, count = args[0], int(args[1])
+        reply_to = event.reply_to_msg_id
 
         for _ in range(count):
-            try:
-                if reply_to:
-                    await self.client.send_message(event.chat_id, message, reply_to=reply_to)
-                else:
-                    await self.client.send_message(event.chat_id, message)
-                await asyncio.sleep(1)  
-            except Exception as e:
-                logger.error(f"Spam error: {e}")
-                break  
+            if event.chat_id not in self._running_spams:
+                return  # Stop if spam is canceled
+            await event.respond(message, reply_to=reply_to)
 
     async def delay_spam(self, event):
-        """Handles the `.delayspam` command with optional reply support."""
-        args = event.raw_text.split(maxsplit=3)
-        if len(args) < 4 or not args[2].isdigit() or not args[3].isdigit():
-            await event.edit("**Usage:** `.delayspam <message> <count> <delay>`")
+        """Handles the `.delayspam <msg> <count> <delay>` command."""
+        args = event.pattern_match.group(1).rsplit(" ", 2)
+        if len(args) != 3 or not args[1].isdigit() or not args[2].isdigit():
+            await event.reply("**Usage:** `.delayspam <message> <count> <delay>`")
             return
 
-        message = args[1]
-        count = int(args[2])
-        delay = int(args[3])
-        reply_to = event.reply_to_msg_id  # Get the replied message ID (if any)
+        message, count, delay = args[0], int(args[1]), int(args[2])
+        reply_to = event.reply_to_msg_id
 
-        await event.delete()
-
-        if reply_to:
-            try:
-                await self.client.get_messages(event.chat_id, ids=reply_to)  # Check if the message exists
-            except:
-                await event.respond("❌ **The replied message was deleted. Cancelling delayed spam.**")
-                return  
+        self._running_spams[event.chat_id] = True  # Mark spam as running
 
         for _ in range(count):
-            try:
-                if reply_to:
-                    await self.client.send_message(event.chat_id, message, reply_to=reply_to)
-                else:
-                    await self.client.send_message(event.chat_id, message)
-                await asyncio.sleep(delay)  
-            except Exception as e:
-                logger.error(f"Delayed spam error: {e}")
-                break  
+            if event.chat_id not in self._running_spams:
+                return  # Stop if spam is canceled
+            await event.respond(message, reply_to=reply_to)
+            await asyncio.sleep(delay)
+
+    async def stop_spam(self, event):
+        """Stops ongoing spam in the chat."""
+        if event.chat_id in self._running_spams:
+            del self._running_spams[event.chat_id]
+            await event.reply("**Spam Stopped!**")
+        else:
+            await event.reply("**No active spam found!**")
