@@ -9,7 +9,15 @@ class AFKManager:
             "start_time": None,
             "reason": "I'm AFK right now. I'll get back to you later!"
         }
-        self._ignore_first_message = False  # Flag to ignore the first outgoing message
+        self._last_message_id = None  # Track the last message ID to ignore edits
+        self._bot_user_id = None  # Store the bot's user ID
+
+    async def _get_bot_user_id(self):
+        """Get the bot's user ID."""
+        if not self._bot_user_id:
+            me = await self._client.get_me()
+            self._bot_user_id = me.id
+        return self._bot_user_id
 
     def start(self):
         """Registers AFK event handlers."""
@@ -25,7 +33,7 @@ class AFKManager:
 
         self._afk_status["is_afk"] = True
         self._afk_status["start_time"] = datetime.now()
-        self._ignore_first_message = True  # Set flag to ignore the first outgoing message
+        self._last_message_id = event.id  # Store the message ID of the .afk command
         await event.edit(f"I'm now AFK! Reason: {self._afk_status['reason']}")  # Use event.edit
 
     async def handle_incoming_message(self, event):
@@ -44,11 +52,15 @@ class AFKManager:
             await event.reply(reply_message)  # Keep reply for incoming messages
 
     async def disable_afk(self, event):
-        """Disables AFK when the user sends a message."""
+        """Disables AFK when the user sends a new message (not an edit)."""
         if self._afk_status["is_afk"]:
-            if self._ignore_first_message:
-                # Ignore the first outgoing message (the .afk command itself)
-                self._ignore_first_message = False
+            # Ignore if the message is an edit of the .afk command
+            if event.id == self._last_message_id:
+                return
+
+            # Ignore if the message is sent by the bot itself
+            bot_user_id = await self._get_bot_user_id()
+            if event.sender_id == bot_user_id:
                 return
 
             self._afk_status["is_afk"] = False
