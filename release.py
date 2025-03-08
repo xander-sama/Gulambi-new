@@ -8,8 +8,7 @@ class PokemonReleaseManager:
         self.client = client
         self.release_task = None  
         self.running = False  
-        self.current_chat_id = None  
-        self.pokemon_to_release = []  
+        self.current_chat_id = None  # Stores the chat where .release on was sent
 
     async def release_pokemon(self):
         """Releases Pokémon in the chat where .release on was used"""
@@ -20,7 +19,7 @@ class PokemonReleaseManager:
                     self.running = False
                     return  
 
-                for pokemon in self.pokemon_to_release:  
+                for pokemon in constants.RELEASE:
                     logger.info(f"Releasing {pokemon} in chat {self.current_chat_id}...")
                     await self.client.send_message(self.current_chat_id, f"/release {pokemon}")
 
@@ -44,22 +43,14 @@ class PokemonReleaseManager:
                 await asyncio.sleep(5)  
 
     async def start_releasing(self, event):
-        """Starts auto-releasing Pokémon. Users can specify Pokémon to release."""
-        args = event.raw_text.split()[1:]  
-
-        if not args:
-            await event.respond(" Please provide Pokémon names to release.\n\n**Example:** `.release on Pikachu Bulbasaur Charmander`")
-            return
-
-        self.pokemon_to_release = args  
-
+        """Starts the auto-release process in the chat where the command was sent"""
         if not self.running:
             self.running = True
-            self.current_chat_id = event.chat_id  
+            self.current_chat_id = event.chat_id  # Store chat ID
             self.release_task = asyncio.create_task(self.release_pokemon())
-            await event.respond(f" Auto-releasing: {', '.join(self.pokemon_to_release)} in this chat!")  
+            await event.respond("✅ Pokémon auto-release started in this chat!")  
         else:
-            await event.respond(" Release is already running!")
+            await event.respond("⚠️ Release is already running!")
 
     async def stop_releasing(self, event):
         """Stops the release process"""
@@ -68,8 +59,7 @@ class PokemonReleaseManager:
             if self.release_task:
                 self.release_task.cancel()
                 self.release_task = None
-            self.current_chat_id = None  
-            self.pokemon_to_release = []  
-            await event.respond("Pokémon auto-release stopped!")  
+            self.current_chat_id = None  # Reset the chat ID
+            await event.respond("❌ Pokémon auto-release stopped!")  
         else:
-            await event.respond("No active release process.")
+            await event.respond("⚠️ No active release process.")
