@@ -26,38 +26,33 @@ class CloneManager:
         try:
             # Save original profile details
             my_profile = await self._client(GetFullUserRequest("me"))
-            if not hasattr(my_profile, 'user'):
-                await event.edit("Failed to fetch your profile details.")
-                return
 
             self.original_profile = {
-                "first_name": my_profile.user.first_name or "",  # Access first_name from user attribute
-                "last_name": my_profile.user.last_name or "",    # Access last_name from user attribute
-                "bio": my_profile.about or "",                  # Access bio directly
-                "username": my_profile.user.username or "",     # Access username from user attribute
-                "photos": await self._client.get_profile_photos("me")  # Save current profile pictures
+                "first_name": my_profile.user.first_name or "",
+                "last_name": my_profile.user.last_name or "",
+                "bio": my_profile.about or "",
+                "username": my_profile.user.username or "",
+                "photos": await self._client.get_profile_photos("me")
             }
 
             # Get target user's profile details
             target_profile = await self._client(GetFullUserRequest(user.id))
-            if not hasattr(target_profile, 'user'):
-                await event.edit("Failed to fetch target user details. The user might not exist.")
-                return
-
-            target_user = target_profile.user
+            target_user = target_profile.user  # Extract `user` object
 
             # Update name, bio, and username
             await self._client(UpdateProfileRequest(
-                first_name=target_user.first_name or "",  # Access first_name from user attribute
-                last_name=target_user.last_name or "",    # Access last_name from user attribute
-                about=target_profile.about or "",         # Access bio directly
-                username=target_user.username or ""       # Access username from user attribute
+                first_name=target_user.first_name or "",
+                last_name=target_user.last_name or "",
+                about=target_profile.about or "",
+                username=target_user.username or ""
             ))
 
             # Upload latest profile picture if available
             target_photos = await self._client.get_profile_photos(user)
             if target_photos:
-                await self._client(UploadProfilePhotoRequest(await self._client.download_media(target_photos[0])))
+                photo_path = await self._client.download_media(target_photos[0])
+                await self._client(UploadProfilePhotoRequest(file=await self._client.upload_file(photo_path)))
+                os.remove(photo_path)  # Clean up temp file
 
             await event.edit(f"Cloned **{target_user.first_name}**'s profile!")
 
@@ -82,7 +77,7 @@ class CloneManager:
             # Remove cloned profile picture
             current_photos = await self._client.get_profile_photos("me")
             if current_photos:
-                await self._client(DeletePhotosRequest([current_photos[0]]))  # Remove most recent cloned PFP
+                await self._client(DeletePhotosRequest([current_photos[0]]))
 
             # Clear stored profile
             self.original_profile = {}
@@ -97,4 +92,4 @@ class CloneManager:
         return [
             {"callback": self.clone, "event": events.NewMessage(pattern=r"\.clone$", outgoing=True)},
             {"callback": self.revert, "event": events.NewMessage(pattern=r"\.revert$", outgoing=True)},
-            ]
+        ]

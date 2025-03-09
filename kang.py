@@ -71,37 +71,39 @@ class KangManager:
 
     async def create_new_sticker_pack(self, event, sticker_path, emoji, pack_short_name):
         """Creates a new sticker pack and adds the sticker."""
-        # Use the @Stickers bot to create a new pack
-        await event.client.send_message("Stickers", "/newpack")
-        await asyncio.sleep(1)
-        await event.client.send_message("Stickers", pack_short_name)
-        await asyncio.sleep(1)
-        await event.client.send_file("Stickers", sticker_path, force_document=True)
-        await asyncio.sleep(1)
-        await event.client.send_message("Stickers", emoji)
-        await asyncio.sleep(1)
-        await event.client.send_message("Stickers", "/publish")
-        await asyncio.sleep(1)
-        await event.client.send_message("Stickers", pack_short_name)
+        client = event.client
+
+        async def send_and_wait(text):
+            await client.send_message("Stickers", text)
+            await asyncio.sleep(2)  # Give some time for the bot to process
+
+        await send_and_wait("/newpack")
+        await send_and_wait(pack_short_name)
+        await client.send_file("Stickers", sticker_path, force_document=False)
+        await send_and_wait(emoji)
+        await send_and_wait("/publish")
+        await send_and_wait(pack_short_name)
+        
         return True
 
     async def add_sticker_to_existing_pack(self, event, sticker_path, emoji, pack_short_name):
         """Adds a sticker to an existing sticker pack."""
-        # Use the @Stickers bot to add a sticker to the pack
-        await event.client.send_message("Stickers", "/addsticker")
-        await asyncio.sleep(1)
-        await event.client.send_message("Stickers", pack_short_name)
-        await asyncio.sleep(1)
-        await event.client.send_file("Stickers", sticker_path, force_document=True)
-        await asyncio.sleep(1)
-        await event.client.send_message("Stickers", emoji)
-        await asyncio.sleep(1)
-        await event.client.send_message("Stickers", "/done")
+        client = event.client
+
+        async def send_and_wait(text):
+            await client.send_message("Stickers", text)
+            await asyncio.sleep(2)
+
+        await send_and_wait("/addsticker")
+        await send_and_wait(pack_short_name)
+        await client.send_file("Stickers", sticker_path, force_document=False)
+        await send_and_wait(emoji)
+        await send_and_wait("/done")
+
         return True
 
     def is_valid_emoji(self, emoji):
         """Checks if the provided emoji is valid."""
-        # Simple validation: Check if the input is a single emoji
         return len(emoji) == 1 and emoji in "😀😃😄😁😆😅😂🤣😊😇🙂🙃😉😌😍🥰😘😗😙😚😋😛😝😜🤪🤨🧐🤓😎🤩🥳😏😒😞😔😟😕🙁☹️😣😖😫😩🥺😢😭😤😠😡🤬🤯😳🥵🥶😱😨😰😥😓🤗🤔🤭🤫🤥😶😐😑😬🙄😯😦😧😮😲🥱😴🤤😪😵🤐🥴🤢🤮🤧😷🤒🤕🤑🤠😈👿👹👺🤡💩👻💀☠️👽👾🤖🎃😺😸😹😻😼😽🙀😿😾"
 
     def get_event_handlers(self):
