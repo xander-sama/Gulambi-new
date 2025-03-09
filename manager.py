@@ -121,6 +121,55 @@ class Manager:
         """Handles the `.help` command."""
         await event.edit(HELP_MESSAGE)
 
+    async def handle_guesser_automation_control_request(self, event) -> None:
+        """Handles user requests to enable/disable guesser automation."""
+        await self._guesser.handle_automation_control_request(event)
+
+    async def handle_hunter_automation_control_request(self, event) -> None:
+        """Handles user requests to enable/disable hunter automation."""
+        await self._hunter.handle_automation_control_request(event)
+
+    async def list_pokemon(self, event) -> None:
+        """Handles the `.list` command by showing Pokémon based on the specified category."""
+        args = event.pattern_match.group(1)
+
+        categories = {
+            "regular": constants.REGULAR_BALL,
+            "repeat": constants.REPEAT_BALL,
+            "ultra": constants.ULTRA_BALL,
+            "great": constants.GREAT_BALL,
+            "nest": constants.NEST_BALL,
+            "safari": constants.SAFARI
+        }
+
+        if not args:  
+            await event.edit(
+                "**Usage:** `.list <category>`\n\n"
+                "**Available categories:**\n"
+                "- `regular`\n"
+                "- `repeat`\n"
+                "- `ultra`\n"
+                "- `great`\n"
+                "- `nest`\n"
+                "- `safari`"
+            )
+            return
+
+        category = args.lower()
+        if category not in categories:
+            await event.edit(f"**Invalid category!**\nUse one of: {', '.join(categories.keys())}")
+            return
+
+        pokemon_list = categories[category]
+        if not pokemon_list:
+            await event.edit(f"No Pokémon found in `{category}` category.")
+            return
+
+        formatted_list = ", ".join(sorted(pokemon_list))  
+        await event.edit(f"**{category.capitalize()} Ball Pokémon:**\n{formatted_list}")
+
+ 
+    
     @property
     def event_handlers(self) -> List[Dict[str, Callable | events.NewMessage]]:
         """Returns a list of event handlers, including admin, kang, and Pokémon commands."""
@@ -133,8 +182,9 @@ class Manager:
             {'callback': self._release_manager.add_pokemon, 'event': events.NewMessage(pattern=r"\.release add (.+)", outgoing=True)},
             {'callback': self._release_manager.remove_pokemon, 'event': events.NewMessage(pattern=r"\.release remove (.+)", outgoing=True)},
             {'callback': self._release_manager.list_pokemon, 'event': events.NewMessage(pattern=r"\.release list", outgoing=True)},
-            {'callback': self._guesser.toggle_guessing, 'event': events.NewMessage(pattern=r"\.guess (on|off|stats)$", outgoing=True)},
-            {'callback': self._hunter.toggle_hunting, 'event': events.NewMessage(pattern=r"\.hunt (on|off|stats)$", outgoing=True)},
+            {'callback': self.handle_guesser_automation_control_request, 'event': events.NewMessage(pattern=constants.GUESSER_COMMAND_REGEX, outgoing=True)},
+            {'callback': self.handle_hunter_automation_control_request, 'event': events.NewMessage(pattern=constants.HUNTER_COMMAND_REGEX, outgoing=True)},
+            {'callback': self.list_pokemon, 'event': events.NewMessage(pattern=constants.LIST_COMMAND_REGEX, outgoing=True)} 
             {'callback': self._spam_manager.spam, 'event': events.NewMessage(pattern=r"\.spam (.+) (\d+)", outgoing=True)},
             {'callback': self._spam_manager.delay_spam, 'event': events.NewMessage(pattern=r"\.delayspam (.+) (\d+) (\d+)", outgoing=True)},
             {'callback': self._spam_manager.stop_spam, 'event': events.NewMessage(pattern=r"\.stopspam$", outgoing=True)},
