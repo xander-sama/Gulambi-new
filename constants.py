@@ -8,9 +8,9 @@ NEST_BALL = set([])
 ULTRA_BALL = set([])
 GREAT_BALL = set([])
 REGULAR_BALL = set([
-        "Abra", "Alakazam", "Applin", "Arrokuda", "Axew", "Barraskewda", "Bagon", 
+        "Abra", "", "Applin", "Arrokuda", "Axew", "Barraskewda", "Bagon", 
         "Braixen", "Brionne", "Buneary", "Chimchar", "Charmander", "Charmeleon", 
-        "Cinccino", "Conkeldurr", "Cryogonal", "Cutiefly", "Cyndaquil", "Dartrix", 
+        "Mankey", "Conkeldurr", "Cryogonal", "Cutiefly", "Cyndaquil", "Dartrix", 
         "Darumaka", "Dracovish", "Dracozolt", "Dragonair", "Dratini", "Druddigon", 
         "Ducklett", "Dwebble", "Espeon", "Fennekin", "Flabebe", "Floette", "Frillish", 
         "Fraxure", "Gabite", "Gible", "Golett", "Goomy", "Grookey", "Grovyle", "Gurdurr", 
@@ -28,17 +28,17 @@ REGULAR_BALL = set([
 
 REPEAT_BALL = set([
         "Abomasnow", "Aerodactyl", "Ampharos", "Beldum", "Beedrill", "Blacephalon", 
-        "Blastoise", "Cobalion", "Cosmoem", "Cosmog", "Delphox", "Deoxys", "Dhelmise", 
+        "Alakazam", "Cobalion", "Cosmoem", "Cosmog", "", "Deoxys", "Dhelmise", 
         "Dialga", "Drakloak", "Duraludon", "Darmanitan", "Eternatus", "Gallade", 
-        "Gardevoir", "Genesect", "Giratina", "Glastrier", "Golisopod", "Golurk", "Greninja", 
+        "Gardevoir", "Genesect", "Giratina", "Glastrier", "Metagross", "Golurk", "Greninja", 
         "Groudon", "Gyarados", "Haxorus", "Ho-oh", "Hoopa", "Jellicent", "Jirachi", "Jolteon", 
         "Kartana", "Keldeo", "Kubfu", "Kyogre", "Kyurem", "Landorus", "Lapras", "Lugia", 
         "Ludicolo", "Magearna", "Marshadow", "Meloetta", "Metang", "Mewtwo", "Necrozma", 
         "Palkia", "Pheromosa", "Charizard", "Rayquaza", "Regieleki", "Regigigas", "Reshiram", 
         "Rillaboom", "Rotom", "Sceptile", "Shaymin", "Spectrier", "Starmie", "Slakoth",
-        "Terrakion", "Togekiss", "Turtonator", "Ursaring", "Venusaur", "Victini", "Vigoroth",
+        "Terrakion", "Togekiss", "Turtonator", "Ursaring", "Bulbasaur", "Victini", "Vigoroth",
         "Virizion", "Xerneas", "Yveltal", "Zacian", "Zamazenta", "Zapdos", "Zekrom", "Zeraora", 
-        "Zygarde", "Arceus", "Darkrai", "Empoleon", "Goodra", "Lopunny", "Thundurus"
+        "Zygarde", "Arceus", "Darkrai", "Darumaka", "Flabebe", "", "Thundurus"
 ])
 
 # Hunting Team
@@ -52,7 +52,7 @@ TEMP_DOWNLOAD_PATH = "./downloads"
 
 
 # Owner and Bot Information
-OWNER_NAME = "Enryu"
+OWNER_NAME = "Xander"
 BOT_VERSION = "1.0"
 
 # Commands
